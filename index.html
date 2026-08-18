@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Studio // Cyberpunk Arcade</title>
-    <link rel="icon" type="image/jpeg" href="./src/assets/images/ssj4_gogeta_icon_1787080126364.jpg" />
+    <link rel="icon" type="image/jpeg" href="./icon.jpg" />
     <meta name="description" content="Next-gen unblocked cyberpunk game matrix loaded from JSON iframe database." />
     <meta property="og:title" content="Game Studio // Cyberpunk Arcade" />
     <meta property="og:description" content="Next-gen unblocked cyberpunk game matrix loaded from JSON iframe database." />
@@ -16,8 +16,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#08090e] text-slate-100 overflow-x-hidden antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="root">
+      <!-- Fallback loader while JavaScript bundles initialize -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#08090e;color:#00f0ff;font-family:'Share Tech Mono',monospace;text-align:center;padding:20px;">
+        <div style="font-size:24px;font-weight:bold;letter-spacing:2px;margin-bottom:12px;text-shadow:0 0 10px rgba(0,240,255,0.5);">INITIALIZING GAME MATRIX...</div>
+        <div style="width:200px;height:4px;background:#141829;border-radius:2px;overflow:hidden;position:relative;">
+          <div style="width:50%;height:100%;background:#00f0ff;animation:pulseBar 1.2s infinite ease-in-out;"></div>
+        </div>
+        <noscript>
+          <p style="color:#ff3b81;margin-top:20px;font-size:14px;">JavaScript is required to run Game Studio. Please enable JavaScript in your browser.</p>
+        </noscript>
+      </div>
+      <style>
+        @keyframes pulseBar {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(250%); }
+        }
+      </style>
+    </div>
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
-
