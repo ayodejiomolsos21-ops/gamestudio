@@ -15,9 +15,9 @@ import { JsonManagerModal } from './components/JsonManagerModal';
 import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsModal';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
-const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v2';
-const STORAGE_FAVS_KEY = 'unblocked_games_favs_v2';
-const STORAGE_RECENT_KEY = 'unblocked_games_recent_v2';
+const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v5';
+const STORAGE_FAVS_KEY = 'unblocked_games_favs_v5';
+const STORAGE_RECENT_KEY = 'unblocked_games_recent_v5';
 const STORAGE_CLOAK_KEY = 'unblocked_tab_cloak_v1';
 const STORAGE_PANIC_KEY = 'unblocked_panic_key_v1';
 const STORAGE_PANIC_URL = 'unblocked_panic_url_v1';
@@ -355,7 +355,7 @@ export default function App() {
             />
             <span className="font-orbitron font-bold text-slate-200">GAME STUDIO</span>
             <span className="text-slate-600">•</span>
-            <span className="text-slate-400">UNBLOCKED CYBER MATRIX &bull; ALL GAMES IN JSON</span>
+            <span className="text-slate-400">GAME STUDIO BY AYODEJI OMOLOSO</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
             <span>PANIC KEY: <kbd className="px-1.5 py-0.5 rounded bg-[#141829] border border-pink-500/40 text-pink-300 font-bold">{panicKey}</kbd></span>
