@@ -15,9 +15,9 @@ import { JsonManagerModal } from './components/JsonManagerModal';
 import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsModal';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
-const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v1';
-const STORAGE_FAVS_KEY = 'unblocked_games_favs_v1';
-const STORAGE_RECENT_KEY = 'unblocked_games_recent_v1';
+const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v2';
+const STORAGE_FAVS_KEY = 'unblocked_games_favs_v2';
+const STORAGE_RECENT_KEY = 'unblocked_games_recent_v2';
 const STORAGE_CLOAK_KEY = 'unblocked_tab_cloak_v1';
 const STORAGE_PANIC_KEY = 'unblocked_panic_key_v1';
 const STORAGE_PANIC_URL = 'unblocked_panic_url_v1';
@@ -44,9 +44,9 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_FAVS_KEY);
-      return saved ? JSON.parse(saved) : ['2048', 'tetris', 'snake'];
+      return saved ? JSON.parse(saved) : ['2048'];
     } catch {
-      return ['2048', 'tetris', 'snake'];
+      return ['2048'];
     }
   });
 
