@@ -1,0 +1,6 @@
+{
+  "name": "Game Studio",
+  "description": "A fast and customizable unblocked games portal storing and loading games via iframes from a JSON configuration.",
+  "requestFramePermissions": ["fullscreen"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
