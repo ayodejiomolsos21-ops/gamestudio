@@ -13,11 +13,12 @@ import { GamePlayer } from './components/GamePlayer';
 import { AddGameModal } from './components/AddGameModal';
 import { JsonManagerModal } from './components/JsonManagerModal';
 import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsModal';
+import { CategoryFilterBar } from './components/CategoryFilterBar';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
-const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v12';
-const STORAGE_FAVS_KEY = 'unblocked_games_favs_v12';
-const STORAGE_RECENT_KEY = 'unblocked_games_recent_v12';
+const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v16';
+const STORAGE_FAVS_KEY = 'unblocked_games_favs_v16';
+const STORAGE_RECENT_KEY = 'unblocked_games_recent_v16';
 const STORAGE_CLOAK_KEY = 'unblocked_tab_cloak_v1';
 const STORAGE_PANIC_KEY = 'unblocked_panic_key_v1';
 const STORAGE_PANIC_URL = 'unblocked_panic_url_v1';
@@ -40,6 +41,7 @@ export default function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('popular');
 
   const [favorites, setFavorites] = useState(() => {
     try {
@@ -102,7 +104,7 @@ export default function App() {
     setActiveGame(game);
     // Increment plays count in memory
     setGames(prev =>
-      prev.map(g => (g.id === game.id ? { ...g, plays: g.plays + 1 } : g))
+      prev.map(g => (g.id === game.id ? { ...g, plays: (g.plays || 0) + 1 } : g))
     );
     // Track in recent
     setRecentIds(prev => {
@@ -160,9 +162,33 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [panicKey, panicUrl]);
 
-  // Filtered games list
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      All: games.length,
+      Idle: 0,
+      Multiplayer: 0,
+      Simulation: 0,
+      Horror: 0,
+      Arcade: 0,
+      RPG: 0,
+      Favorites: favorites.length,
+      Recent: recentIds.length
+    };
+
+    games.forEach(g => {
+      const cat = g.category;
+      if (cat && counts[cat] !== undefined) {
+        counts[cat]++;
+      }
+    });
+
+    return counts;
+  }, [games, favorites, recentIds]);
+
+  // Filtered and sorted games list
   const filteredGames = useMemo(() => {
-    return games.filter(game => {
+    const list = games.filter(game => {
       // Category filter
       if (selectedCategory === 'Favorites') {
         if (!favorites.includes(game.id)) return false;
@@ -184,7 +210,24 @@ export default function App() {
 
       return true;
     });
-  }, [games, selectedCategory, searchQuery, favorites, recentIds]);
+
+    // Sorting
+    return list.sort((a, b) => {
+      if (sortBy === 'popular') {
+        return (b.plays || 0) - (a.plays || 0);
+      }
+      if (sortBy === 'rating') {
+        return (b.rating || 0) - (a.rating || 0);
+      }
+      if (sortBy === 'az') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      if (sortBy === 'za') {
+        return (b.title || '').localeCompare(a.title || '');
+      }
+      return 0;
+    });
+  }, [games, selectedCategory, searchQuery, favorites, recentIds, sortBy]);
 
   // Featured Game for Spotlight Banner
   const featuredGame = useMemo(() => {
@@ -232,67 +275,55 @@ export default function App() {
           />
         ) : (
           /* Games Catalog View */
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
             {/* Spotlight Banner (when on 'All' and no active search) */}
             {selectedCategory === 'All' && !searchQuery.trim() && featuredGame && (
               <div className="relative rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-slate-900 border border-purple-500/30 p-6 sm:p-8 overflow-hidden shadow-2xl">
                 <div className="absolute right-0 top-0 -mt-8 -mr-8 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="relative z-10 max-w-2xl space-y-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    <Flame className="w-3.5 h-3.5 text-orange-400" /> Featured Unblocked Pick
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono-cyber">
+                    <Flame className="w-3.5 h-3.5 text-orange-400" /> FEATURED MATRIX PICK
                   </div>
-                  <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-orbitron">
                     {featuredGame.title}
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-300 line-clamp-2 leading-relaxed">
+                  <p className="text-sm sm:text-base text-slate-300 line-clamp-2 leading-relaxed font-sans">
                     {featuredGame.description}
                   </p>
                   <div className="flex flex-wrap items-center gap-3 pt-2">
                     <button
                       id="hero-play-btn"
                       onClick={() => handlePlayGame(featuredGame)}
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-600/30 transition-all duration-200 flex items-center gap-2 active:scale-95"
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-slate-950 font-orbitron font-black text-xs shadow-xl shadow-cyan-500/20 transition-all duration-200 flex items-center gap-2 active:scale-95"
                     >
-                      <Play className="w-4 h-4 fill-white" /> Play Now
+                      <Play className="w-4 h-4 fill-current" /> LAUNCH GAME
                     </button>
                     <button
                       id="hero-add-custom-btn"
                       onClick={() => setIsAddModalOpen(true)}
-                      className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-semibold text-xs transition flex items-center gap-1.5"
+                      className="px-4 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-mono-cyber font-semibold text-xs transition flex items-center gap-1.5"
                     >
-                      <Plus className="w-4 h-4" /> Add Custom Iframe
+                      <Plus className="w-4 h-4" /> + CUSTOM IFRAME
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Catalog Section Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-extrabold text-white tracking-tight">
-                  {selectedCategory === 'Favorites'
-                    ? 'Your Favorited Games'
-                    : selectedCategory === 'Recent'
-                    ? 'Recently Played'
-                    : `${selectedCategory} Games`}
-                </h2>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-400">
-                  {filteredGames.length}
-                </span>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsJsonModalOpen(true)}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white transition"
-                >
-                  <FileCode className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>View JSON</span>
-                </button>
-              </div>
-            </div>
+            {/* Category Filter & Sorting System */}
+            <CategoryFilterBar
+              selectedCategory={selectedCategory}
+              onSelectCategory={(cat) => {
+                setSelectedCategory(cat);
+              }}
+              categoryCounts={categoryCounts}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              searchQuery={searchQuery}
+              onClearSearch={() => setSearchQuery('')}
+              totalGames={games.length}
+              filteredCount={filteredGames.length}
+            />
 
             {/* Games Grid */}
             {filteredGames.length > 0 ? (
@@ -314,14 +345,14 @@ export default function App() {
                   <Gamepad2 className="w-8 h-8" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-white">No games found</h3>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  <h3 className="text-lg font-bold text-white font-orbitron">NO GAMES FOUND</h3>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto font-mono-cyber">
                     {searchQuery
-                      ? `No games matching "${searchQuery}". Try searching another title or category.`
-                      : 'No games in this list yet.'}
+                      ? `No games matching "${searchQuery}". Try selecting another category filter.`
+                      : 'No games in this category list yet.'}
                   </p>
                 </div>
-                <div className="flex items-center justify-center gap-3 pt-2">
+                <div className="flex items-center justify-center gap-3 pt-2 font-mono-cyber">
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
@@ -330,11 +361,19 @@ export default function App() {
                       Clear Search
                     </button>
                   )}
+                  {selectedCategory !== 'All' && (
+                    <button
+                      onClick={() => setSelectedCategory('All')}
+                      className="px-4 py-2 rounded-xl bg-cyan-950 border border-cyan-500/40 hover:bg-cyan-900 text-cyan-300 text-xs font-semibold transition"
+                    >
+                      View All Games
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
                   >
-                    <Plus className="w-4 h-4" /> Add Iframe Game
+                    <Plus className="w-4 h-4" /> Add Custom Game
                   </button>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Eye, Code, Globe, Sparkles } from 'lucide-react';
 
-const CATEGORIES = ['Arcade', 'Puzzle', 'Action', 'Retro', 'Classic', 'Sports'];
+const CATEGORIES = ['Idle', 'Multiplayer', 'Simulation', 'Horror', 'Arcade', 'RPG', 'Action', 'Strategy'];
 
 export const AddGameModal = ({
   isOpen,

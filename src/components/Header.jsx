@@ -14,15 +14,12 @@ import ssj4GogetaIcon from '../assets/images/ssj4_gogeta_icon_1787080126364.jpg'
 
 const CATEGORIES = [
   'All',
-  'Arcade',
-  'Action',
-  'Strategy',
-  'Physics',
   'Idle',
-  'Sports',
   'Multiplayer',
   'Simulation',
   'Horror',
+  'Arcade',
+  'RPG',
   'Favorites',
   'Recent'
 ];

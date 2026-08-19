@@ -1,6 +1,6 @@
 import { standaloneGameHtml, createDataUri, generatePlayableGameHtml } from './gameTemplates';
 
-// Default initial games definition matching /public/games.json (Single game with Unity WebGL)
+// Default initial games definition matching /public/games.json (Single game)
 export const defaultGamesList = [
   {
     id: "a-dance-of-fire-and-ice",
@@ -16,66 +16,6 @@ export const defaultGamesList = [
     featured: true,
     rating: 4.9,
     plays: 74200
-  },
-  {
-    id: "deltarune",
-    title: "Deltarune",
-    category: "RPG",
-    description: "Step into the Dark World in Toby Fox's acclaimed episodic RPG. Master bullet-hell dodging, act or fight, and make your destiny.",
-    controls: "Arrow Keys to Move, [Z] Confirm / Action, [X] Cancel / Dash, [C] Menu",
-    iframeSrc: "deltarune.html",
-    iframeHtml: '<script>\n    launch();\n    function launch() {\n      try {\n        fetch("https://cdn.jsdelivr.net/gh/regedit-sys/web-port@main/deltarune/free.html?t="+Date.now())\n          .then(response => response.text())\n          .then(html => {\n                document.documentElement.innerHTML = html;\n                document.documentElement.querySelectorAll(\'script\').forEach(oldScript => {\n                    const newScript = document.createElement(\'script\');\n                    if (oldScript.src) {\n                        newScript.src = oldScript.src;\n                    } else {\n                        newScript.textContent = oldScript.textContent;\n                    }\n                    document.body.appendChild(newScript);\n                });\n          });\n      } catch (error) {\n        console.error(\'error:\', error);\n      }\n    }\n  </script>',
-    thumbnail: "",
-    thumbnailGradient: "from-purple-600 via-pink-600 to-slate-950",
-    iconName: "Sparkles",
-    featured: true,
-    rating: 4.9,
-    plays: 98400
-  },
-  {
-    id: "sonic-3d-blast",
-    title: "Sonic 3D Blast",
-    category: "Platformer",
-    description: "The classic isometric 3D Sonic adventure! Rescue the Flickies from Dr. Robotnik across vibrant isometric zones with genuine Mega Drive emulation.",
-    controls: "Arrow Keys: Move | [Z]/[X]/[C]: Spin Dash & Jump | [Enter]: Start",
-    iframeSrc: "clsonic3dblast.html",
-    iframeHtml: "",
-    thumbnail: "",
-    thumbnailGradient: "from-blue-600 via-cyan-500 to-slate-950",
-    iconName: "Zap",
-    featured: true,
-    rating: 4.8,
-    plays: 65100
-  },
-  {
-    id: "sonic-jam",
-    title: "Sonic Jam",
-    category: "Retro",
-    description: "The classic Sega Sonic compilation featuring iconic adventures, special stages, and high-speed platforming nostalgia.",
-    controls: "Arrow Keys: Directional Pad | [Z]/[X]: Action & Jump | [Enter]: Start",
-    iframeSrc: "clsonicjam.html",
-    iframeHtml: "",
-    thumbnail: "",
-    thumbnailGradient: "from-amber-500 via-orange-600 to-slate-950",
-    iconName: "Disc",
-    featured: true,
-    rating: 4.7,
-    plays: 54200
-  },
-  {
-    id: "sonic-r",
-    title: "Sonic R",
-    category: "Racing",
-    description: "The authentic 3D foot-racing classic! Race as Sonic, Tails, Knuckles, and Amy across 5 intricate 3D tracks with high-tempo eurobeat soundtrack.",
-    controls: "Arrow Keys: Steer/Accelerate | [Z]: Jump/Action | [X]: Drift | [Enter]: Start",
-    iframeSrc: "clsonicr.html",
-    iframeHtml: "",
-    thumbnail: "",
-    thumbnailGradient: "from-red-600 via-yellow-500 to-slate-950",
-    iconName: "Trophy",
-    featured: true,
-    rating: 4.8,
-    plays: 83900
   }
 ];
 

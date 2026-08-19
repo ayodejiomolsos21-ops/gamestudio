@@ -1347,6 +1347,741 @@ export const standaloneGameHtml = {
   loop();
 </script>
 </body>
+</html>`,
+
+  // 8. Cookie Clicker (Idle Incremental Cyber Bakery)
+  'cookie-clicker': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Cookie Clicker</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; user-select:none; }
+  body { background:#0f172a; color:#fff; display:flex; justify-content:center; align-items:center; min-height:100vh; overflow:hidden; }
+  .cookie-wrap { width:680px; max-width:96vw; height:450px; background:radial-gradient(circle, #1e293b 0%, #090d16 100%); border-radius:16px; border:2px solid #eab308; box-shadow:0 0 35px rgba(234,179,8,0.25); display:flex; overflow:hidden; position:relative; }
+  .cookie-col { flex:1.2; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; border-right:1px solid #334155; position:relative; }
+  .shop-col { flex:1; background:#0b0f19; padding:16px; overflow-y:auto; }
+  .cookie-btn { width:150px; height:150px; border-radius:50%; background:radial-gradient(circle, #d97706 0%, #92400e 100%); border:4px solid #facc15; font-size:75px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 0 25px rgba(234,179,8,0.4); transition:transform 0.08s; }
+  .cookie-btn:active { transform:scale(0.92); }
+  .shop-item { background:#1e293b; border:1px solid #334155; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:0.2s; }
+  .shop-item:hover { background:#334155; border-color:#eab308; }
+  .float-cookie { position:absolute; font-weight:bold; color:#facc15; font-size:18px; pointer-events:none; animation:floatCookie 0.8s forwards; text-shadow:0 0 4px #000; }
+  @keyframes floatCookie { 0% { opacity:1; transform:translateY(0); } 100% { opacity:0; transform:translateY(-50px); } }
+</style>
+</head>
+<body>
+<div class="cookie-wrap" id="cookie-container">
+  <div class="cookie-col">
+    <div style="text-align:center;margin-bottom:16px;">
+      <h2 style="font-size:26px;font-weight:900;color:#facc15;">🍪 <span id="cookies-num">0</span> COOKIES</h2>
+      <p style="font-size:13px;color:#38bdf8;font-weight:bold;">per second: <span id="cps-num">0</span></p>
+    </div>
+    <div class="cookie-btn" id="big-cookie">🍪</div>
+    <p style="font-size:11px;color:#94a3b8;margin-top:16px;">Click the Giant Cookie to bake fresh cookies!</p>
+  </div>
+  <div class="shop-col">
+    <h3 style="font-size:14px;color:#facc15;margin-bottom:12px;text-align:center;font-weight:bold;">🏪 CYBER BAKERY UPGRADES</h3>
+    <div class="shop-item" onclick="buy('cursor')">
+      <div><b>👆 Auto-Cursor</b><br><small style="color:#94a3b8">+0.5 CPS (Count: <span id="cnt-cursor">0</span>)</small></div>
+      <div style="color:#facc15;font-weight:bold;"><span id="cst-cursor">15</span> 🍪</div>
+    </div>
+    <div class="shop-item" onclick="buy('grandma')">
+      <div><b>👵 Cyber Grandma</b><br><small style="color:#94a3b8">+4 CPS (Count: <span id="cnt-grandma">0</span>)</small></div>
+      <div style="color:#facc15;font-weight:bold;"><span id="cst-grandma">100</span> 🍪</div>
+    </div>
+    <div class="shop-item" onclick="buy('farm')">
+      <div><b>🌾 Cookie Farm</b><br><small style="color:#94a3b8">+16 CPS (Count: <span id="cnt-farm">0</span>)</small></div>
+      <div style="color:#facc15;font-weight:bold;"><span id="cst-farm">500</span> 🍪</div>
+    </div>
+    <div class="shop-item" onclick="buy('mine')">
+      <div><b>⛏️ Chocolate Mine</b><br><small style="color:#94a3b8">+60 CPS (Count: <span id="cnt-mine">0</span>)</small></div>
+      <div style="color:#facc15;font-weight:bold;"><span id="cst-mine">2000</span> 🍪</div>
+    </div>
+    <div class="shop-item" onclick="buy('factory')">
+      <div><b>🏭 Quantum Factory</b><br><small style="color:#94a3b8">+250 CPS (Count: <span id="cnt-factory">0</span>)</small></div>
+      <div style="color:#facc15;font-weight:bold;"><span id="cst-factory">8500</span> 🍪</div>
+    </div>
+  </div>
+</div>
+<script>
+  ${audioSynthScript}
+  let cookies = 0, cps = 0;
+  const items = {
+    cursor: { count: 0, cost: 15, cps: 0.5 },
+    grandma: { count: 0, cost: 100, cps: 4 },
+    farm: { count: 0, cost: 500, cps: 16 },
+    mine: { count: 0, cost: 2000, cps: 60 },
+    factory: { count: 0, cost: 8500, cps: 250 }
+  };
+  const numEl = document.getElementById('cookies-num');
+  const cpsEl = document.getElementById('cps-num');
+  const btn = document.getElementById('big-cookie');
+  const wrap = document.getElementById('cookie-container');
+
+  btn.addEventListener('pointerdown', (e) => {
+    cookies += 1;
+    playSound('coin');
+    updateUi();
+    const span = document.createElement('span');
+    span.className = 'float-cookie';
+    span.innerText = '+1';
+    span.style.left = (e.clientX - wrap.getBoundingClientRect().left) + 'px';
+    span.style.top = (e.clientY - wrap.getBoundingClientRect().top) + 'px';
+    wrap.appendChild(span);
+    setTimeout(() => span.remove(), 800);
+  });
+
+  function buy(key) {
+    const it = items[key];
+    if (cookies >= it.cost) {
+      cookies -= it.cost;
+      it.count++;
+      it.cost = Math.floor(it.cost * 1.15);
+      recalcCps();
+      playSound('score');
+      updateUi();
+    }
+  }
+
+  function recalcCps() {
+    cps = Object.values(items).reduce((acc, it) => acc + (it.count * it.cps), 0);
+  }
+
+  function updateUi() {
+    numEl.innerText = Math.floor(cookies);
+    cpsEl.innerText = cps.toFixed(1);
+    for (const k in items) {
+      document.getElementById('cnt-' + k).innerText = items[k].count;
+      document.getElementById('cst-' + k).innerText = items[k].cost;
+    }
+  }
+
+  setInterval(() => {
+    cookies += cps / 10;
+    numEl.innerText = Math.floor(cookies);
+  }, 100);
+</script>
+</body>
+</html>`,
+
+  // 9. Fireboy & Watergirl (Multiplayer 2-Player Co-op)
+  'fireboy-and-watergirl': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fireboy and Watergirl</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; user-select:none; }
+  body { background:#030712; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  .temple-wrap { position:relative; width:680px; max-width:96vw; height:440px; background:#111827; border-radius:14px; border:3px solid #06b6d4; box-shadow:0 0 35px rgba(6,182,212,0.25); overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; font-weight:bold; font-size:13px; pointer-events:none; }
+  .controls-bar { margin-top:8px; font-size:12px; color:#94a3b8; }
+</style>
+</head>
+<body>
+<div class="temple-wrap">
+  <canvas id="c" width="680" height="440"></canvas>
+  <div class="hud">
+    <span style="color:#ef4444">🔥 FIREBOY: ARROW KEYS</span>
+    <span style="color:#38bdf8">💧 WATERGIRL: [A][W][D]</span>
+  </div>
+</div>
+<div class="controls-bar">Cooperate to collect elemental gems and reach the exit doors! Fireboy swims in lava, Watergirl swims in water!</div>
+<script>
+  ${audioSynthScript}
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let p1 = { x: 50, y: 360, vx: 0, vy: 0, w: 22, h: 30, color: '#ef4444', grounded: true, isFire: true };
+  let p2 = { x: 100, y: 360, vx: 0, vy: 0, w: 22, h: 30, color: '#38bdf8', grounded: true, isFire: false };
+
+  let platforms = [
+    { x: 0, y: 400, w: 680, h: 40 },
+    { x: 160, y: 320, w: 140, h: 18 },
+    { x: 380, y: 320, w: 140, h: 18 },
+    { x: 40, y: 240, w: 140, h: 18 },
+    { x: 500, y: 240, w: 140, h: 18 },
+    { x: 200, y: 160, w: 280, h: 18 },
+    { x: 80, y: 80, w: 520, h: 18 }
+  ];
+
+  let pools = [
+    { x: 260, y: 390, w: 70, h: 12, type: 'lava', color: '#ef4444' },
+    { x: 350, y: 390, w: 70, h: 12, type: 'water', color: '#06b6d4' }
+  ];
+
+  let gems = [
+    { x: 230, y: 290, type: 'fire', collected: false },
+    { x: 450, y: 290, type: 'water', collected: false },
+    { x: 340, y: 130, type: 'fire', collected: false },
+    { x: 340, y: 50, type: 'water', collected: false }
+  ];
+
+  let doorFire = { x: 520, y: 40, w: 30, h: 40, reached: false };
+  let doorWater = { x: 565, y: 40, w: 30, h: 40, reached: false };
+
+  let keys = {};
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'ArrowUp' && p1.grounded) { p1.vy = -9; p1.grounded = false; playSound('jump'); }
+    if (e.code === 'KeyW' && p2.grounded) { p2.vy = -9; p2.grounded = false; playSound('jump'); }
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function reset() {
+    p1.x = 50; p1.y = 360; p1.vx = 0; p1.vy = 0;
+    p2.x = 100; p2.y = 360; p2.vx = 0; p2.vy = 0;
+    gems.forEach(g => g.collected = false);
+  }
+
+  function updatePlayer(p, isP1) {
+    if (isP1) {
+      if (keys['ArrowLeft']) p.vx = -3.8;
+      else if (keys['ArrowRight']) p.vx = 3.8;
+      else p.vx *= 0.75;
+    } else {
+      if (keys['KeyA']) p.vx = -3.8;
+      else if (keys['KeyD']) p.vx = 3.8;
+      else p.vx *= 0.75;
+    }
+
+    p.vy += 0.45; // Gravity
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.grounded = false;
+    for (const plat of platforms) {
+      if (p.x + p.w > plat.x && p.x < plat.x + plat.w &&
+          p.y + p.h >= plat.y && p.y + p.h <= plat.y + plat.h + p.vy && p.vy >= 0) {
+        p.y = plat.y - p.h;
+        p.vy = 0;
+        p.grounded = true;
+      }
+    }
+
+    // Hazard checks
+    for (const pool of pools) {
+      if (p.x + p.w > pool.x && p.x < pool.x + pool.w && p.y + p.h > pool.y) {
+        if (p.isFire && pool.type === 'water') { playSound('hit'); reset(); }
+        if (!p.isFire && pool.type === 'lava') { playSound('hit'); reset(); }
+      }
+    }
+
+    // Gems
+    for (const g of gems) {
+      if (!g.collected && Math.hypot(p.x - g.x, p.y - g.y) < 25) {
+        if ((p.isFire && g.type === 'fire') || (!p.isFire && g.type === 'water')) {
+          g.collected = true;
+          playSound('coin');
+        }
+      }
+    }
+  }
+
+  function loop() {
+    updatePlayer(p1, true);
+    updatePlayer(p2, false);
+
+    // Win check
+    if (Math.hypot(p1.x - doorFire.x, p1.y - doorFire.y) < 25 &&
+        Math.hypot(p2.x - doorWater.x, p2.y - doorWater.y) < 25) {
+      playSound('score');
+      reset();
+    }
+
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Platforms
+    ctx.fillStyle = '#334155';
+    for (const pl of platforms) {
+      ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(pl.x, pl.y, pl.w, 3);
+      ctx.fillStyle = '#334155';
+    }
+
+    // Pools
+    for (const pool of pools) {
+      ctx.fillStyle = pool.color;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = pool.color;
+      ctx.fillRect(pool.x, pool.y, pool.w, pool.h);
+      ctx.shadowBlur = 0;
+    }
+
+    // Exit Doors
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(doorFire.x, doorFire.y, doorFire.w, doorFire.h);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(doorWater.x, doorWater.y, doorWater.w, doorWater.h);
+
+    // Gems
+    for (const g of gems) {
+      if (!g.collected) {
+        ctx.fillStyle = g.type === 'fire' ? '#ef4444' : '#38bdf8';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.beginPath();
+        ctx.moveTo(g.x, g.y - 8);
+        ctx.lineTo(g.x + 7, g.y);
+        ctx.lineTo(g.x, g.y + 8);
+        ctx.lineTo(g.x - 7, g.y);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // Players
+    ctx.fillStyle = p1.color;
+    ctx.fillRect(p1.x, p1.y, p1.w, p1.h);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(p1.x + 4, p1.y + 6, 4, 4); ctx.fillRect(p1.x + 14, p1.y + 6, 4, 4);
+
+    ctx.fillStyle = p2.color;
+    ctx.fillRect(p2.x, p2.y, p2.w, p2.h);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(p2.x + 4, p2.y + 6, 4, 4); ctx.fillRect(p2.x + 14, p2.y + 6, 4, 4);
+  }
+
+  loop();
+</script>
+</body>
+</html>`,
+
+  // 10. Rooftop Duel (Multiplayer 2-Player Physics Shootout)
+  'rooftop-snipers': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooftop Duel</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; user-select:none; }
+  body { background:#030712; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  .roof-wrap { position:relative; width:680px; max-width:96vw; height:430px; background:linear-gradient(to bottom, #090d16 0%, #1e1b4b 60%, #030712 100%); border-radius:14px; border:3px solid #8b5cf6; box-shadow:0 0 35px rgba(139,92,246,0.3); overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; font-weight:bold; font-size:16px; text-shadow:0 0 10px #000; }
+  .controls-bar { margin-top:8px; font-size:12px; color:#94a3b8; }
+</style>
+</head>
+<body>
+<div class="roof-wrap">
+  <canvas id="c" width="680" height="430"></canvas>
+  <div class="hud">
+    <span style="color:#06b6d4">P1 (BLUE): <span id="s1">0</span></span>
+    <span style="color:#f43f5e">P2 (RED): <span id="s2">0</span></span>
+  </div>
+</div>
+<div class="controls-bar">P1: [W] Jump/Flip, [E] Shoot | P2: [I] Jump/Flip, [O] Shoot! Knock opponent off the skyscraper!</div>
+<script>
+  ${audioSynthScript}
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const s1El = document.getElementById('s1');
+  const s2El = document.getElementById('s2');
+
+  let s1 = 0, s2 = 0;
+  let bullets = [];
+
+  let p1 = { x: 220, y: 240, vx: 0, vy: 0, angle: 0, va: 0, w: 24, h: 36, color: '#06b6d4', gunAngle: 0, grounded: true };
+  let p2 = { x: 440, y: 240, vx: 0, vy: 0, angle: 0, va: 0, w: 24, h: 36, color: '#f43f5e', gunAngle: Math.PI, grounded: true };
+
+  const roof = { x: 160, y: 280, w: 360, h: 150 };
+
+  window.addEventListener('keydown', e => {
+    if (e.code === 'KeyW' && p1.grounded) { p1.vy = -10; p1.va = 0.12; p1.grounded = false; playSound('jump'); }
+    if (e.code === 'KeyE') {
+      bullets.push({ x: p1.x + 12, y: p1.y + 12, vx: 12, vy: (Math.random()-0.5)*2, owner: 1 });
+      playSound('laser');
+    }
+    if (e.code === 'KeyI' && p2.grounded) { p2.vy = -10; p2.va = -0.12; p2.grounded = false; playSound('jump'); }
+    if (e.code === 'KeyO') {
+      bullets.push({ x: p2.x + 12, y: p2.y + 12, vx: -12, vy: (Math.random()-0.5)*2, owner: 2 });
+      playSound('laser');
+    }
+  });
+
+  function resetRound() {
+    p1.x = 220; p1.y = 240; p1.vx = 0; p1.vy = 0; p1.angle = 0; p1.va = 0;
+    p2.x = 440; p2.y = 240; p2.vx = 0; p2.vy = 0; p2.angle = 0; p2.va = 0;
+    bullets = [];
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function updatePlayer(p) {
+    p.vy += 0.45;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.angle += p.va;
+
+    if (p.x + p.w > roof.x && p.x < roof.x + roof.w && p.y + p.h >= roof.y && p.y + p.h <= roof.y + 15 && p.vy >= 0) {
+      p.y = roof.y - p.h;
+      p.vy = 0;
+      p.vx *= 0.8;
+      p.grounded = true;
+      p.angle *= 0.8;
+      p.va = 0;
+    } else {
+      p.grounded = false;
+    }
+
+    if (p.y > 450) {
+      playSound('explode');
+      if (p === p1) s2++; else s1++;
+      s1El.innerText = s1;
+      s2El.innerText = s2;
+      resetRound();
+    }
+  }
+
+  function update() {
+    updatePlayer(p1);
+    updatePlayer(p2);
+
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.x += b.vx;
+      b.y += b.vy;
+
+      if (b.owner === 1 && Math.hypot(b.x - p2.x, b.y - p2.y) < 25) {
+        p2.vx += 9;
+        p2.vy -= 4;
+        playSound('hit');
+        bullets.splice(i, 1);
+      } else if (b.owner === 2 && Math.hypot(b.x - p1.x, b.y - p1.y) < 25) {
+        p1.vx -= 9;
+        p1.vy -= 4;
+        playSound('hit');
+        bullets.splice(i, 1);
+      } else if (b.x < 0 || b.x > canvas.width) {
+        bullets.splice(i, 1);
+      }
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // City Skyline
+    ctx.fillStyle = '#1e1b4b';
+    ctx.fillRect(40, 160, 80, 270);
+    ctx.fillRect(550, 140, 90, 290);
+    ctx.fillRect(20, 220, 60, 210);
+
+    // Skyscraper Roof
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(roof.x, roof.y, roof.w, roof.h);
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(roof.x, roof.y, roof.w, 6);
+
+    // Bullets
+    ctx.fillStyle = '#facc15';
+    for (const b of bullets) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Players
+    [p1, p2].forEach(p => {
+      ctx.save();
+      ctx.translate(p.x + p.w/2, p.y + p.h/2);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(p === p1 ? 2 : -6, -10, 4, 4);
+      // Gun
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(p === p1 ? 6 : -14, -2, 10, 5);
+      ctx.restore();
+    });
+  }
+
+  loop();
+</script>
+</body>
+</html>`,
+
+  // 11. 3D Flight Simulator (Simulation)
+  'flight-simulator-3d': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Flight Simulator</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Courier New', monospace; user-select:none; }
+  body { background:#030712; color:#38bdf8; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  .sim-wrap { position:relative; width:680px; max-width:96vw; height:440px; background:#000; border-radius:14px; border:2px solid #06b6d4; box-shadow:0 0 35px rgba(6,182,212,0.3); overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; font-weight:bold; font-size:13px; pointer-events:none; }
+  .controls-bar { margin-top:8px; font-size:12px; color:#94a3b8; }
+</style>
+</head>
+<body>
+<div class="sim-wrap">
+  <canvas id="c" width="680" height="440"></canvas>
+  <div class="hud">
+    <span>ALTITUDE: <b id="alt" style="color:#22c55e">2400</b> FT</span>
+    <span>AIRSPEED: <b id="spd" style="color:#facc15">320</b> KTS</span>
+    <span>PITCH/ROLL: <b id="att" style="color:#38bdf8">0° / 0°</b></span>
+  </div>
+</div>
+<div class="controls-bar">Arrow Keys / WASD: Pitch & Roll | [Space]: Boost Afterburner | Fly through Neon Rings!</div>
+<script>
+  ${audioSynthScript}
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const altEl = document.getElementById('alt');
+  const spdEl = document.getElementById('spd');
+  const attEl = document.getElementById('att');
+
+  let pitch = 0, roll = 0, speed = 320, alt = 2400;
+  let rings = [];
+  for (let i = 0; i < 8; i++) {
+    rings.push({ x: (Math.random() - 0.5) * 400, y: (Math.random() - 0.5) * 200, z: 400 + i * 250, r: 60 });
+  }
+
+  let keys = {};
+  window.addEventListener('keydown', e => { keys[e.code] = true; });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function loop() {
+    // Flight physics controls
+    if (keys['ArrowUp'] || keys['KeyW']) pitch -= 0.03;
+    if (keys['ArrowDown'] || keys['KeyS']) pitch += 0.03;
+    if (keys['ArrowLeft'] || keys['KeyA']) roll -= 0.04;
+    if (keys['ArrowRight'] || keys['KeyD']) roll += 0.04;
+
+    pitch *= 0.94;
+    roll *= 0.94;
+
+    alt += pitch * 40;
+    alt = Math.max(200, Math.min(8000, alt));
+
+    altEl.innerText = Math.floor(alt);
+    spdEl.innerText = Math.floor(speed);
+    attEl.innerText = Math.floor(pitch * 57.3) + '° / ' + Math.floor(roll * 57.3) + '°';
+
+    // Update rings in 3D perspective
+    for (const rg of rings) {
+      rg.z -= speed * 0.04;
+      if (rg.z < 10) {
+        playSound('coin');
+        rg.z = 2000;
+        rg.x = (Math.random() - 0.5) * 500;
+        rg.y = (Math.random() - 0.5) * 300;
+      }
+    }
+
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw() {
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(roll);
+
+    // Horizon Line
+    const horizonY = -pitch * 300;
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-400, horizonY);
+    ctx.lineTo(400, horizonY);
+    ctx.stroke();
+
+    // 3D Terrain grid lines
+    ctx.strokeStyle = 'rgba(6,182,212,0.2)';
+    for (let x = -300; x <= 300; x += 60) {
+      ctx.beginPath();
+      ctx.moveTo(x, horizonY);
+      ctx.lineTo(x * 2.5, 300);
+      ctx.stroke();
+    }
+
+    // 3D Target Rings
+    for (const rg of rings) {
+      if (rg.z > 0) {
+        const scale = 250 / rg.z;
+        const rx = rg.x * scale;
+        const ry = (rg.y * scale) + horizonY;
+        const rad = rg.r * scale;
+
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(1, 4 * scale);
+        ctx.beginPath();
+        ctx.arc(rx, ry, rad, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    // Cockpit HUD Crosshair
+    ctx.restore();
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(canvas.width/2, canvas.height/2, 20, 0, Math.PI * 2);
+    ctx.moveTo(canvas.width/2 - 40, canvas.height/2); ctx.lineTo(canvas.width/2 - 20, canvas.height/2);
+    ctx.moveTo(canvas.width/2 + 20, canvas.height/2); ctx.lineTo(canvas.width/2 + 40, canvas.height/2);
+    ctx.stroke();
+  }
+
+  loop();
+</script>
+</body>
+</html>`,
+
+  // 12. Night Watch (Horror Survival FNAF Style)
+  'midnight-surveillance-fnaf': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Night Watch</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Courier New', monospace; user-select:none; }
+  body { background:#000; color:#ef4444; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  .fnaf-wrap { position:relative; width:680px; max-width:96vw; height:440px; background:#050505; border:3px solid #ef4444; box-shadow:0 0 35px rgba(239,68,68,0.3); border-radius:14px; overflow:hidden; display:flex; }
+  .office-view { flex:1; position:relative; background:#0a0a0f; display:flex; flex-direction:column; justify-content:space-between; padding:16px; }
+  .cam-system { width:220px; background:#111; border-left:2px solid #ef4444; padding:12px; display:flex; flex-direction:column; gap:8px; }
+  .cam-btn { background:#1e1e24; color:#fff; border:1px solid #ef4444; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:11px; }
+  .cam-btn.active { background:#ef4444; color:#000; }
+  .toggle-btn { background:#1e1e24; color:#fff; border:1px solid #38bdf8; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:6px; }
+  .static-noise { position:absolute; inset:0; background:repeating-radial-gradient(#000 0 0.0001%,#fff 0 0.0002%); opacity:0.08; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="fnaf-wrap">
+  <div class="office-view">
+    <div class="static-noise"></div>
+    <div style="display:flex;justify-content:space-between;font-weight:bold;color:#facc15;">
+      <span>TIME: <b id="clock-txt">12 AM</b> (NIGHT 1)</span>
+      <span>POWER: <b id="pwr-txt" style="color:#22c55e">98%</b></span>
+    </div>
+    <div id="cam-monitor" style="flex:1;margin:12px 0;background:#000;border:1px solid #333;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+      <div id="cam-feed" style="font-size:16px;font-weight:bold;color:#38bdf8;text-align:center;">
+        [CAM 1: MAIN STAGE - ALL CLEAR]
+      </div>
+      <div id="jumpscare" style="display:none;position:absolute;inset:0;background:#991b1b;color:#fff;font-size:40px;font-weight:900;align-items:center;justify-content:center;z-index:99;">
+        👻 JUMPSCARE!
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="toggle-btn" id="door-left" onclick="toggleDoor('left')">LEFT DOOR: OPEN</button>
+      <button class="toggle-btn" id="door-right" onclick="toggleDoor('right')">RIGHT DOOR: OPEN</button>
+    </div>
+  </div>
+  <div class="cam-system">
+    <h3 style="font-size:12px;color:#ef4444;text-align:center;font-weight:bold;">SECURITY CAMERAS</h3>
+    <button class="cam-btn active" onclick="setCam(1)">CAM 1: Stage</button>
+    <button class="cam-btn" onclick="setCam(2)">CAM 2: Left Hall</button>
+    <button class="cam-btn" onclick="setCam(3)">CAM 3: Right Hall</button>
+    <button class="cam-btn" onclick="setCam(4)">CAM 4: Kitchen</button>
+    <button class="cam-btn" onclick="setCam(5)">CAM 5: Closet</button>
+  </div>
+</div>
+<script>
+  ${audioSynthScript}
+  let power = 98;
+  let hour = 12;
+  let activeCam = 1;
+  let leftDoor = false, rightDoor = false;
+  let monsterPos = 1; // 1 to 5
+
+  const pwrEl = document.getElementById('pwr-txt');
+  const clkEl = document.getElementById('clock-txt');
+  const feedEl = document.getElementById('cam-feed');
+  const scareEl = document.getElementById('jumpscare');
+
+  function toggleDoor(side) {
+    playSound('beat');
+    if (side === 'left') {
+      leftDoor = !leftDoor;
+      document.getElementById('door-left').innerText = 'LEFT DOOR: ' + (leftDoor ? 'CLOSED' : 'OPEN');
+      document.getElementById('door-left').style.borderColor = leftDoor ? '#ef4444' : '#38bdf8';
+    } else {
+      rightDoor = !rightDoor;
+      document.getElementById('door-right').innerText = 'RIGHT DOOR: ' + (rightDoor ? 'CLOSED' : 'OPEN');
+      document.getElementById('door-right').style.borderColor = rightDoor ? '#ef4444' : '#38bdf8';
+    }
+  }
+
+  function setCam(n) {
+    activeCam = n;
+    playSound('beat');
+    document.querySelectorAll('.cam-btn').forEach((b, i) => {
+      b.classList.toggle('active', i + 1 === n);
+    });
+    updateFeed();
+  }
+
+  function updateFeed() {
+    const names = ['STAGE', 'LEFT HALL', 'RIGHT HALL', 'KITCHEN', 'CLOSET'];
+    if (monsterPos === activeCam) {
+      feedEl.innerText = '[CAM ' + activeCam + ': ' + names[activeCam-1] + ' - ⚠️ ENTITY SPOTTED!]';
+      feedEl.style.color = '#ef4444';
+    } else {
+      feedEl.innerText = '[CAM ' + activeCam + ': ' + names[activeCam-1] + ' - ALL CLEAR]';
+      feedEl.style.color = '#38bdf8';
+    }
+  }
+
+  // AI monster movement
+  setInterval(() => {
+    if (Math.random() < 0.4) {
+      monsterPos = (monsterPos % 5) + 1;
+      playSound('hit');
+      updateFeed();
+
+      // Check attack on office
+      if (monsterPos === 2 && !leftDoor) {
+        triggerJumpscare();
+      } else if (monsterPos === 3 && !rightDoor) {
+        triggerJumpscare();
+      }
+    }
+  }, 4000);
+
+  function triggerJumpscare() {
+    scareEl.style.display = 'flex';
+    playSound('explode');
+    setTimeout(() => {
+      scareEl.style.display = 'none';
+      monsterPos = 1;
+      updateFeed();
+    }, 2000);
+  }
+
+  setInterval(() => {
+    let drain = 0.15;
+    if (leftDoor) drain += 0.3;
+    if (rightDoor) drain += 0.3;
+    power = Math.max(0, power - drain);
+    pwrEl.innerText = Math.floor(power) + '%';
+  }, 1000);
+</script>
+</body>
 </html>`
 };
 
