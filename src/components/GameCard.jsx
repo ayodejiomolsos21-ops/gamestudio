@@ -16,28 +16,83 @@ import {
   CircleDot, 
   X,
   Code2,
-  Terminal
+  Terminal,
+  Gamepad2,
+  Gamepad,
+  Skull,
+  Moon,
+  Coins,
+  Anchor,
+  Plane,
+  Globe,
+  Swords,
+  Rocket,
+  Shield,
+  Cloud,
+  Users,
+  Target,
+  Trees,
+  Atom,
+  Snowflake,
+  Waves,
+  Trophy,
+  Compass,
+  Ghost,
+  Briefcase,
+  Key,
+  Eye,
+  Building,
+  Heart,
+  Dices
 } from 'lucide-react';
+
+const ICON_MAP = {
+  Flame,
+  Moon,
+  Zap,
+  Coins,
+  Anchor,
+  Plane,
+  Globe,
+  Swords,
+  Rocket,
+  Layers,
+  Shield,
+  Cloud,
+  Users,
+  Target,
+  Crosshair,
+  Feather,
+  Trees,
+  Atom,
+  Snowflake,
+  Sparkles,
+  Waves,
+  Trophy,
+  Compass,
+  Skull,
+  Gamepad2,
+  Gamepad,
+  Ghost,
+  Briefcase,
+  Key,
+  Eye,
+  Building,
+  Heart,
+  Dices,
+  Hash,
+  Grid3X3,
+  Radio,
+  Navigation,
+  Activity,
+  CircleDot,
+  Terminal
+};
 
 // Icon helper
 const renderIcon = (name) => {
-  const props = { className: "w-10 h-10 text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" };
-  switch (name) {
-    case 'Hash': return <Hash {...props} />;
-    case 'Grid3X3': return <Grid3X3 {...props} />;
-    case 'Zap': return <Zap {...props} />;
-    case 'Feather': return <Feather {...props} />;
-    case 'Flame': return <Flame {...props} />;
-    case 'Radio': return <Radio {...props} />;
-    case 'Sparkles': return <Sparkles {...props} />;
-    case 'Layers': return <Layers {...props} />;
-    case 'Navigation': return <Navigation {...props} />;
-    case 'Activity': return <Activity {...props} />;
-    case 'Crosshair': return <Crosshair {...props} />;
-    case 'CircleDot': return <CircleDot {...props} />;
-    case 'X': return <X {...props} />;
-    default: return <Sparkles {...props} />;
-  }
+  const IconComponent = ICON_MAP[name] || Gamepad2;
+  return <IconComponent className="w-10 h-10 text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" />;
 };
 
 export const GameCard = ({
@@ -133,7 +188,7 @@ export const GameCard = ({
             </h3>
             <div className="flex items-center gap-1 text-xs font-mono-cyber text-yellow-400 font-bold shrink-0">
               <Star className="w-3 h-3 fill-yellow-400" />
-              <span>{game.rating.toFixed(1)}</span>
+              <span>{typeof game.rating === 'number' ? game.rating.toFixed(1) : '4.8'}</span>
             </div>
           </div>
           <p className="text-xs text-slate-400 line-clamp-2 mb-3 leading-relaxed font-sans">
@@ -145,10 +200,10 @@ export const GameCard = ({
         <div className="pt-2.5 border-t border-[#181d2f] flex items-center justify-between text-[10px] font-mono-cyber text-slate-400">
           <span className="truncate max-w-[160px] text-cyan-300/80 flex items-center gap-1" title={game.controls}>
             <Terminal className="w-3 h-3 text-cyan-400 shrink-0" />
-            <span className="truncate">{game.controls}</span>
+            <span className="truncate">{game.controls || 'Mouse / Keyboard'}</span>
           </span>
           <span className="text-pink-400/90 shrink-0 font-bold">
-            {game.plays.toLocaleString()} RUNS
+            {(game.plays || 12000).toLocaleString()} RUNS
           </span>
         </div>
       </div>

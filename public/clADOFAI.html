@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>A Dance of Fire and Ice</title>
+  <!-- Ultimate Game Stash file--> 
+  <!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/paigerodeghero/academicwebsite@897c910c65e6c68b04c44a6b6eba0b99d0f2f2cf/TemplateData/style.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .webgl-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #gameContainer {
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+    #gameContainer canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/gh/paigerodeghero/academicwebsite@897c910c65e6c68b04c44a6b6eba0b99d0f2f2cf/TemplateData/UnityProgress.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/udbsite/adofai@f170efcb1b532312817e69f26ce3f84c99940238/Build/UnityLoader.js"></script>
+</head>
+<body>
+  <div class="webgl-content">
+    <div id="gameContainer" style="width: 100vw; height: 100vh"></div>
+  </div>
+  <script>
+    var gameInstance = UnityLoader.instantiate(
+      "gameContainer",
+      "https://cdn.jsdelivr.net/gh/udbsite/adofai@f170efcb1b532312817e69f26ce3f84c99940238/Build/adofaiii4.json",
+      {
+        onProgress: UnityProgress,
+        Module: {
+          onRuntimeInitialized: function() {
+            if (typeof UnityProgress === "function") {
+              UnityProgress(gameInstance, "complete");
+            }
+          }
+        }
+      }
+    );
+  </script>
+</body>
+</html>

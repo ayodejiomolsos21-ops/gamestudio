@@ -15,11 +15,14 @@ import ssj4GogetaIcon from '../assets/images/ssj4_gogeta_icon_1787080126364.jpg'
 const CATEGORIES = [
   'All',
   'Arcade',
-  'Puzzle',
   'Action',
-  'Retro',
-  'Classic',
+  'Strategy',
+  'Physics',
+  'Idle',
   'Sports',
+  'Multiplayer',
+  'Simulation',
+  'Horror',
   'Favorites',
   'Recent'
 ];
@@ -62,18 +65,18 @@ export const Header = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-orbitron font-black text-lg sm:text-xl tracking-wider text-white">
+                <span className="font-orbitron font-black text-base sm:text-lg tracking-wider text-white">
                   GAME<span className="text-cyan-400 neon-text-cyan">STUDIO</span>
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono-cyber font-bold bg-cyan-950/70 text-cyan-300 border border-cyan-500/40">
+                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono-cyber font-bold bg-cyan-950/70 text-cyan-300 border border-cyan-500/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-1.5 animate-pulse" />
-                  SYS.ONLINE // {totalGamesCount}
+                  ONLINE // {totalGamesCount}
                 </span>
               </div>
-              <p className="text-[10px] font-mono-cyber text-slate-400 hidden sm:flex items-center gap-1.5 tracking-wider">
-                <span className="text-pink-400">// MATRIX NODE</span>
-                <span className="text-slate-600">•</span>
-                <span className="text-yellow-400">UNBLOCKED 240Hz</span>
+              <p className="text-[10px] font-mono-cyber text-slate-400 flex items-center gap-1.5 tracking-wider">
+                <span className="text-pink-400 font-semibold">BY AYODEJI OMOLOSO</span>
+                <span className="text-slate-600 hidden sm:inline">•</span>
+                <span className="text-yellow-400 hidden sm:inline">MATRIX 240Hz</span>
               </p>
             </div>
           </div>

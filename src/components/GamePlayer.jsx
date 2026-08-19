@@ -102,9 +102,9 @@ export const GamePlayer = ({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6 flex flex-col items-center justify-center">
       {/* Top Cyber HUD Bar Navigation */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0d101c] p-3.5 rounded-xl border border-[#1b233a] shadow-lg shadow-cyan-950/20 backdrop-blur-md relative overflow-hidden">
+      <div className="w-full flex flex-wrap items-center justify-between gap-3 bg-[#0d101c] p-3.5 rounded-xl border border-[#1b233a] shadow-lg shadow-cyan-950/20 backdrop-blur-md relative overflow-hidden">
         {/* Top cyan accent line */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-cyan-500 via-pink-500 to-yellow-400" />
 
@@ -190,6 +190,17 @@ export const GamePlayer = ({
             <span className="hidden lg:inline">THEATER</span>
           </button>
 
+          {/* Direct Window Launcher */}
+          <button
+            id="player-direct-tab-btn"
+            onClick={() => window.open(gameUrl, '_blank')}
+            className="p-2 rounded-lg bg-[#141829] hover:bg-[#1e253e] text-cyan-300 hover:text-white border border-[#1f2742] text-xs font-mono-cyber flex items-center gap-1.5 transition"
+            title="Open Game in Dedicated Browser Window"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden lg:inline">OPEN TAB</span>
+          </button>
+
           {/* Stealth Tab Cloak Window */}
           <button
             id="player-stealth-btn"
@@ -218,7 +229,7 @@ export const GamePlayer = ({
       <div
         ref={containerRef}
         id="game-viewport-container"
-        className={`relative w-full rounded-xl bg-black border-2 border-[#1c243b] overflow-hidden shadow-2xl transition-all duration-300 flex flex-col items-center justify-center ${
+        className={`relative w-full rounded-xl bg-black border-2 border-[#1c243b] overflow-hidden shadow-2xl transition-all duration-300 flex items-center justify-center mx-auto my-auto ${
           isTheater ? 'h-[84vh]' : 'h-[650px] max-h-[75vh]'
         }`}
       >
@@ -238,9 +249,8 @@ export const GamePlayer = ({
           id="game-iframe"
           title={game.title}
           src={gameUrl}
-          className="w-full h-full border-0 bg-[#08090e]"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups"
-          allow="fullscreen; autoplay; gamepad; camera; microphone"
+          className="w-full h-full border-0 bg-black block m-auto self-center"
+          allow="fullscreen; autoplay; gamepad; camera; microphone; clipboard-read; clipboard-write; xr-spatial-tracking; web-share"
         />
       </div>
 

@@ -15,9 +15,9 @@ import { JsonManagerModal } from './components/JsonManagerModal';
 import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsModal';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
-const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v7';
-const STORAGE_FAVS_KEY = 'unblocked_games_favs_v7';
-const STORAGE_RECENT_KEY = 'unblocked_games_recent_v7';
+const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v12';
+const STORAGE_FAVS_KEY = 'unblocked_games_favs_v12';
+const STORAGE_RECENT_KEY = 'unblocked_games_recent_v12';
 const STORAGE_CLOAK_KEY = 'unblocked_tab_cloak_v1';
 const STORAGE_PANIC_KEY = 'unblocked_panic_key_v1';
 const STORAGE_PANIC_URL = 'unblocked_panic_url_v1';
