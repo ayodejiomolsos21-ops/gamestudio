@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>A Day In The Office</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#1e293b; color:#f8fafc; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:16px; }
+  #office-sim { width:100%; max-width:850px; background:#0f172a; border:2px solid #38bdf8; border-radius:16px; padding:20px; box-shadow:0 0 35px rgba(56,189,248,0.25); display:flex; flex-direction:column; gap:16px; }
+  .office-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:12px; }
+  .office-title { font-size:18px; font-weight:800; color:#38bdf8; letter-spacing:1px; }
+  .metrics-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  .metric-card { background:#1e293b; padding:12px; border-radius:10px; border:1px solid #334155; display:flex; flex-direction:column; gap:4px; }
+  .metric-label { font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:bold; }
+  .metric-val { font-size:16px; font-weight:900; color:#f8fafc; }
+  .bar-wrap { width:100%; height:8px; background:#334155; border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 0.3s; }
+  .desk-viewport { height:260px; background:linear-gradient(180deg, #334155 0%, #1e293b 100%); border-radius:12px; border:2px dashed #475569; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .monitor-screen { width:220px; height:140px; background:#0284c7; border:6px solid #0f172a; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(2,132,199,0.5); position:relative; text-align:center; padding:8px; }
+  .boss-indicator { position:absolute; top:12px; right:16px; background:#ef4444; color:#fff; font-weight:bold; font-size:12px; padding:6px 14px; border-radius:20px; animation:pulse 1s infinite; display:none; }
+  .actions-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  button { background:#1e293b; color:#f8fafc; border:1px solid #38bdf8; padding:12px; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+  button:hover:not(:disabled) { background:#38bdf8; color:#0f172a; transform:scale(1.02); }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+</style>
+</head>
+<body>
+<div id="office-sim">
+  <div class="office-header">
+    <div class="office-title">💼 A DAY IN THE OFFICE // SURVIVE TILL 5:00 PM</div>
+    <div style="font-weight:bold; color:#fbbf24; font-size:14px;" id="clock-txt">TIME: 9:00 AM</div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Productivity</div>
+      <div class="metric-val" id="prod-val">40%</div>
+      <div class="bar-wrap"><div class="bar-fill" id="prod-bar" style="width:40%; background:#22c55e;"></div></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Energy / Sanity</div>
+      <div class="metric-val" id="energy-val">100%</div>
+      <div class="bar-wrap"><div class="bar-fill" id="energy-bar" style="width:100%; background:#38bdf8;"></div></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Boss Suspicion</div>
+      <div class="metric-val" id="susp-val">10%</div>
+      <div class="bar-wrap"><div class="bar-fill" id="susp-bar" style="width:10%; background:#ef4444;"></div></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Coffee Stash</div>
+      <div class="metric-val" id="coffee-val">3 ☕</div>
+      <div style="font-size:10px; color:#94a3b8;">Restores +35% Energy</div>
+    </div>
+  </div>
+
+  <div class="desk-viewport">
+    <div class="boss-indicator" id="boss-alert">⚠️ BOSS PATROLLING! LOOK BUSY!</div>
+    <div class="monitor-screen" id="pc-screen">
+      <div style="font-size:32px;" id="pc-icon">📊</div>
+      <div style="font-size:12px; font-weight:bold; margin-top:4px;" id="pc-text">Quarterly Excel Sheets</div>
+    </div>
+  </div>
+
+  <div class="actions-grid">
+    <button onclick="act('work')">📑 Type Spreadsheets (+Work)</button>
+    <button onclick="act('slush')">🎮 Alt-Tab to Games (-Susp)</button>
+    <button onclick="act('coffee')">☕ Drink Espresso (+Energy)</button>
+    <button onclick="act('meme')">🖨️ Print Memes (+Fun)</button>
+    <button onclick="act('watercooler')">💬 Gossip at Water Cooler</button>
+    <button onclick="act('pretend')">👀 Nod & Pretend to Listen</button>
+  </div>
+</div>
+
+<script>
+  let hour = 9;
+  let min = 0;
+  let prod = 40;
+  let energy = 100;
+  let susp = 10;
+  let coffee = 3;
+  let bossPatrol = false;
+
+  function update() {
+    document.getElementById('clock-txt').innerText = `TIME: ${hour}:${min === 0 ? '00' : '30'} ${hour >= 12 ? 'PM' : 'AM'}`;
+    document.getElementById('prod-val').innerText = prod + '%';
+    document.getElementById('prod-bar').style.width = Math.min(100, prod) + '%';
+    document.getElementById('energy-val').innerText = energy + '%';
+    document.getElementById('energy-bar').style.width = Math.min(100, energy) + '%';
+    document.getElementById('susp-val').innerText = susp + '%';
+    document.getElementById('susp-bar').style.width = Math.min(100, susp) + '%';
+    document.getElementById('coffee-val').innerText = coffee + ' ☕';
+
+    const bossEl = document.getElementById('boss-alert');
+    bossEl.style.display = bossPatrol ? 'block' : 'none';
+
+    if (susp >= 100) {
+      alert("🚨 FIRED! The boss caught you gaming during work hours! Try again.");
+      reset();
+    } else if (energy <= 0) {
+      alert("😴 EXHAUSTION! You passed out on your keyboard. Drink coffee next time!");
+      reset();
+    } else if (hour >= 17) {
+      if (prod >= 70) {
+        alert("🎉 PROMOTION! You survived the 9-to-5 with flying colors!");
+      } else {
+        alert("💼 SHIFT OVER! You survived the day, but performance review was mediocre.");
+      }
+      reset();
+    }
+  }
+
+  function advanceTime() {
+    min += 30;
+    if (min >= 60) {
+      min = 0;
+      hour++;
+    }
+    energy = Math.max(0, energy - 5);
+    bossPatrol = Math.random() < 0.35;
+  }
+
+  function act(type) {
+    if (type === 'work') {
+      prod += 12;
+      energy -= 10;
+      susp = Math.max(0, susp - 15);
+      document.getElementById('pc-icon').innerText = '📊';
+      document.getElementById('pc-text').innerText = 'Hard at Work!';
+    } else if (type === 'slush') {
+      if (bossPatrol) {
+        susp += 40;
+        alert("⚠️ Caught Alt-Tabbing by the boss!");
+      } else {
+        energy = Math.min(100, energy + 15);
+        susp += 8;
+      }
+      document.getElementById('pc-icon').innerText = '👾';
+      document.getElementById('pc-text').innerText = 'Playing Retro Games';
+    } else if (type === 'coffee') {
+      if (coffee > 0) {
+        coffee--;
+        energy = Math.min(100, energy + 35);
+      }
+    } else if (type === 'meme') {
+      if (bossPatrol) susp += 30;
+      else energy = Math.min(100, energy + 20);
+    } else if (type === 'watercooler') {
+      energy = Math.min(100, energy + 25);
+      susp += 5;
+    } else if (type === 'pretend') {
+      susp = Math.max(0, susp - 25);
+      prod += 5;
+    }
+    advanceTime();
+    update();
+  }
+
+  function reset() {
+    hour = 9; min = 0; prod = 40; energy = 100; susp = 10; coffee = 3; bossPatrol = false;
+    update();
+  }
+
+  update();
+</script>
+</body>
+</html>

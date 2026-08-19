@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ancient Sins</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#09090b; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:#18181b; border:2px solid #e11d48; border-radius:14px; box-shadow:0 0 35px rgba(225,29,72,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#fb7185; letter-spacing:1px; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(9,9,11,0.85); padding:4px 16px; border-radius:20px; border:1px solid #e11d48; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">🔥 ANCIENT SINS // DUNGEON HACK & SLASH</div>
+    <div style="font-weight:bold; font-size:14px; color:#fbbf24;" id="score-txt">SOULS: 0 | HP: 100%</div>
+  </div>
+  <div class="controls-bar">[WASD] Move Knight | [Space] Spin Slash | [J/Click] Cast Fireball Spell</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let hero = { x: 360, y: 225, hp: 100, souls: 0 };
+  let fireballs = [];
+  let skeletons = [];
+  let keys = {};
+
+  for (let i = 0; i < 5; i++) spawnSkelly();
+
+  function spawnSkelly() {
+    skeletons.push({
+      x: Math.random() > 0.5 ? 40 : 680,
+      y: Math.random() * 380 + 30,
+      hp: 30,
+      speed: 1.2
+    });
+  }
+
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'KeyJ' || e.code === 'KeyK') castSpell();
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  canvas.addEventListener('click', castSpell);
+
+  function castSpell() {
+    fireballs.push({ x: hero.x, y: hero.y, vx: 8, vy: 0 });
+    fireballs.push({ x: hero.x, y: hero.y, vx: -8, vy: 0 });
+  }
+
+  function loop() {
+    if (keys['KeyA'] || keys['ArrowLeft']) hero.x -= 4;
+    if (keys['KeyD'] || keys['ArrowRight']) hero.x += 4;
+    if (keys['KeyW'] || keys['ArrowUp']) hero.y -= 4;
+    if (keys['KeyS'] || keys['ArrowDown']) hero.y += 4;
+
+    hero.x = Math.max(30, Math.min(690, hero.x));
+    hero.y = Math.max(30, Math.min(420, hero.y));
+
+    // Fireballs
+    for (let i = fireballs.length - 1; i >= 0; i--) {
+      let f = fireballs[i];
+      f.x += f.vx;
+      if (f.x < -10 || f.x > 730) fireballs.splice(i, 1);
+    }
+
+    // Skeletons
+    if (skeletons.length < 6 && Math.random() < 0.03) spawnSkelly();
+
+    for (let i = skeletons.length - 1; i >= 0; i--) {
+      let s = skeletons[i];
+      const dx = hero.x - s.x, dy = hero.y - s.y;
+      const dist = Math.hypot(dx, dy);
+      s.x += (dx / dist) * s.speed;
+      s.y += (dy / dist) * s.speed;
+
+      // Fireball hit
+      fireballs.forEach((f, fidx) => {
+        if (Math.hypot(f.x - s.x, f.y - s.y) < 25) {
+          s.hp -= 20;
+          fireballs.splice(fidx, 1);
+        }
+      });
+
+      if (s.hp <= 0) {
+        hero.souls += 50;
+        skeletons.splice(i, 1);
+      }
+    }
+
+    document.getElementById('score-txt').innerText = `SOULS: ${hero.souls} | HP: ${hero.hp}%`;
+
+    // Render Dungeon
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(0, 0, 720, 450);
+
+    // Stone tiles
+    ctx.strokeStyle = '#27272a';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 720; x += 45) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 450); ctx.stroke(); }
+    for (let y = 0; y < 450; y += 45) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(720, y); ctx.stroke(); }
+
+    // Fireballs
+    fireballs.forEach(f => {
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Skeletons
+    skeletons.forEach(s => {
+      ctx.fillStyle = '#e4e4e7';
+      ctx.fillText('💀', s.x - 8, s.y + 6);
+    });
+
+    // Knight
+    ctx.fillStyle = '#e11d48';
+    ctx.beginPath();
+    ctx.arc(hero.x, hero.y, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🛡️', hero.x - 8, hero.y + 5);
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

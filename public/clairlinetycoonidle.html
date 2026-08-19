@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Airline Tycoon Idle</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0b132b; color:#fff; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:16px; }
+  #tycoon-box { width:100%; max-width:850px; background:#1c2541; border:2px solid #48cae4; border-radius:16px; padding:20px; box-shadow:0 0 35px rgba(72,202,228,0.25); display:flex; flex-direction:column; gap:16px; }
+  .header { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #3a506b; padding-bottom:12px; }
+  .title { font-size:18px; font-weight:900; color:#48cae4; letter-spacing:1px; }
+  .cash { font-size:20px; font-weight:900; color:#52b788; }
+  .fleet-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+  .plane-card { background:#0b132b; border:1px solid #3a506b; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .plane-name { font-weight:bold; font-size:14px; color:#48cae4; display:flex; justify-content:space-between; }
+  .plane-route { font-size:12px; color:#90e0ef; }
+  .plane-stats { font-size:11px; color:#a0aec0; display:flex; justify-content:space-between; }
+  button.flight-btn { background:#0077b6; color:#fff; border:none; padding:10px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer; transition:all 0.15s; }
+  button.flight-btn:hover { background:#0096c7; transform:scale(1.02); }
+  button.upgrade-btn { background:#2d6a4f; color:#fff; border:none; padding:8px; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer; }
+  button.upgrade-btn:hover:not(:disabled) { background:#40916c; }
+  button.upgrade-btn:disabled { opacity:0.3; cursor:not-allowed; }
+</style>
+</head>
+<body>
+<div id="tycoon-box">
+  <div class="header">
+    <div class="title">✈️ AIRLINE TYCOON // GLOBAL FLIGHT FLEET</div>
+    <div class="cash" id="cash-txt">REVENUE: $500</div>
+  </div>
+
+  <div class="fleet-grid" id="fleet-container"></div>
+</div>
+
+<script>
+  let cash = 500;
+
+  const fleet = [
+    { id: 'cessna', name: 'Sky Propeller 200', icon: '🛩️', route: 'Domestic Regional', income: 45, duration: 2000, cost: 200, count: 1, timer: null },
+    { id: 'boeing', name: 'AeroJet 737', icon: '✈️', route: 'Cross-Continent Express', income: 240, duration: 4500, cost: 1200, count: 0, timer: null },
+    { id: 'jumbo', name: 'SkyTitan 747', icon: '🛫', route: 'Transatlantic Luxury', income: 950, duration: 8000, cost: 4500, count: 0, timer: null },
+    { id: 'concorde', name: 'Supersonic Cruiser', icon: '🚀', route: 'Tokyo - London Hyper', income: 3200, duration: 12000, cost: 16000, count: 0, timer: null },
+    { id: 'cargo', name: 'Heavy Cargo Lifter', icon: '📦', route: 'Global Supply Freight', income: 7500, duration: 18000, cost: 40000, count: 0, timer: null },
+    { id: 'space', name: 'Orbital Shuttler', icon: '🛸', route: 'Low Earth Orbit Tours', income: 25000, duration: 30000, cost: 120000, count: 0, timer: null }
+  ];
+
+  function render() {
+    document.getElementById('cash-txt').innerText = 'REVENUE: $' + cash.toLocaleString();
+    const container = document.getElementById('fleet-container');
+    container.innerHTML = '';
+
+    fleet.forEach((p, idx) => {
+      const nextCost = Math.floor(p.cost * Math.pow(1.2, p.count));
+      const card = document.createElement('div');
+      card.className = 'plane-card';
+      card.innerHTML = `
+        <div class="plane-name"><span>${p.icon} ${p.name}</span> <span style="color:#52b788;">x${p.count}</span></div>
+        <div class="plane-route">Route: ${p.route}</div>
+        <div class="plane-stats">
+          <span>Income: $${(p.income * p.count).toLocaleString()}</span>
+          <span>Time: ${(p.duration/1000).toFixed(1)}s</span>
+        </div>
+        <button class="flight-btn" onclick="dispatchFlight(${idx})">✈️ Dispatch Flight</button>
+        <button class="upgrade-btn" ${cash < nextCost ? 'disabled' : ''} onclick="buyPlane(${idx})">Purchase ($${nextCost.toLocaleString()})</button>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function buyPlane(idx) {
+    const p = fleet[idx];
+    const nextCost = Math.floor(p.cost * Math.pow(1.2, p.count));
+    if (cash >= nextCost) {
+      cash -= nextCost;
+      p.count++;
+      render();
+    }
+  }
+
+  function dispatchFlight(idx) {
+    const p = fleet[idx];
+    if (p.count <= 0) {
+      alert("Purchase at least 1 aircraft of this model first!");
+      return;
+    }
+    setTimeout(() => {
+      cash += p.income * p.count;
+      render();
+    }, p.duration);
+  }
+
+  // Auto passive dispatch
+  setInterval(() => {
+    fleet.forEach(p => {
+      if (p.count > 0) {
+        cash += Math.floor((p.income * p.count) / 4);
+      }
+    });
+    render();
+  }, 2000);
+
+  render();
+</script>
+</body>
+</html>

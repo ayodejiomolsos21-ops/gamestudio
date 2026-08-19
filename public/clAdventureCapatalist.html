@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Adventure Capitalist</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0f172a; color:#f8fafc; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:16px; }
+  #cap-box { width:100%; max-width:850px; background:#1e293b; border:2px solid #22c55e; border-radius:16px; padding:20px; box-shadow:0 0 40px rgba(34,197,94,0.3); display:flex; flex-direction:column; gap:16px; }
+  .cap-header { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #334155; padding-bottom:12px; }
+  .cap-title { font-size:20px; font-weight:900; color:#22c55e; letter-spacing:1px; }
+  .money-badge { font-size:22px; font-weight:900; color:#4ade80; text-shadow:0 0 10px rgba(74,222,128,0.5); }
+  .invest-list { display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto; padding-right:6px; }
+  .invest-card { background:#0f172a; border:1px solid #334155; border-radius:12px; padding:12px 16px; display:grid; grid-template-columns:50px 1fr 140px 120px; align-items:center; gap:16px; transition:border-color 0.2s; }
+  .invest-card:hover { border-color:#22c55e; }
+  .invest-icon { font-size:28px; text-align:center; }
+  .invest-info { display:flex; flex-direction:column; gap:4px; }
+  .invest-name { font-weight:bold; font-size:14px; color:#f8fafc; }
+  .invest-payout { font-size:12px; color:#94a3b8; }
+  .progress-wrap { width:100%; height:12px; background:#1e293b; border-radius:6px; overflow:hidden; border:1px solid #334155; }
+  .progress-fill { height:100%; width:0%; background:linear-gradient(90deg, #22c55e, #4ade80); border-radius:6px; }
+  button.buy-btn { background:#22c55e; color:#0f172a; border:none; padding:10px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer; transition:all 0.15s; text-align:center; }
+  button.buy-btn:hover:not(:disabled) { background:#4ade80; transform:scale(1.03); }
+  button.buy-btn:disabled { opacity:0.35; cursor:not-allowed; background:#475569; color:#94a3b8; }
+</style>
+</head>
+<body>
+<div id="cap-box">
+  <div class="cap-header">
+    <div class="cap-title">💰 ADVENTURE CAPITALIST // GLOBAL CONGLOMERATE</div>
+    <div class="money-badge" id="cash-txt">$0.00</div>
+  </div>
+
+  <div class="invest-list" id="invest-container"></div>
+</div>
+
+<script>
+  let cash = 1.00;
+
+  const businesses = [
+    { id: 'lemon', name: 'Lemonade Stand', icon: '🍋', cost: 1, basePayout: 1, duration: 1000, count: 1, progress: 0, running: false, manager: false },
+    { id: 'newspaper', name: 'Newspaper Delivery', icon: '📰', cost: 15, basePayout: 12, duration: 2500, count: 0, progress: 0, running: false, manager: false },
+    { id: 'carwash', name: 'Car Wash', icon: '🚗', cost: 100, basePayout: 90, duration: 5000, count: 0, progress: 0, running: false, manager: false },
+    { id: 'pizza', name: 'Pizza Franchise', icon: '🍕', cost: 800, basePayout: 750, duration: 8000, count: 0, progress: 0, running: false, manager: false },
+    { id: 'bank', name: 'Private Bank', icon: '🏦', cost: 5000, basePayout: 5400, duration: 15000, count: 0, progress: 0, running: false, manager: false },
+    { id: 'oil', name: 'Oil Company', icon: '🛢️', cost: 35000, basePayout: 42000, duration: 30000, count: 0, progress: 0, running: false, manager: false }
+  ];
+
+  function formatMoney(num) {
+    if (num >= 1e9) return '$' + (num / 1e9).toFixed(2) + ' B';
+    if (num >= 1e6) return '$' + (num / 1e6).toFixed(2) + ' M';
+    if (num >= 1e3) return '$' + (num / 1e3).toFixed(2) + ' K';
+    return '$' + num.toFixed(2);
+  }
+
+  function render() {
+    document.getElementById('cash-txt').innerText = formatMoney(cash);
+    const container = document.getElementById('invest-container');
+    container.innerHTML = '';
+
+    businesses.forEach((b, idx) => {
+      const card = document.createElement('div');
+      card.className = 'invest-card';
+
+      const nextCost = b.cost * Math.pow(1.15, b.count);
+      const payout = b.basePayout * b.count;
+
+      card.innerHTML = `
+        <div class="invest-icon" style="cursor:pointer;" onclick="runBusiness(${idx})">${b.icon}</div>
+        <div class="invest-info">
+          <div class="invest-name">${b.name} <span style="color:#22c55e;">[x${b.count}]</span></div>
+          <div class="invest-payout">Yield: ${formatMoney(payout)} / cycle</div>
+          <div class="progress-wrap"><div class="progress-fill" id="bar-${b.id}" style="width:${b.progress}%"></div></div>
+        </div>
+        <button class="buy-btn" style="background:#0284c7; color:#fff;" onclick="runBusiness(${idx})">⚡ Run (${(b.duration/1000).toFixed(1)}s)</button>
+        <button class="buy-btn" ${cash < nextCost ? 'disabled' : ''} onclick="buyBusiness(${idx})">Buy 1<br>${formatMoney(nextCost)}</button>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function buyBusiness(idx) {
+    const b = businesses[idx];
+    const cost = b.cost * Math.pow(1.15, b.count);
+    if (cash >= cost) {
+      cash -= cost;
+      b.count++;
+      render();
+    }
+  }
+
+  function runBusiness(idx) {
+    const b = businesses[idx];
+    if (b.count <= 0 || b.running) return;
+    b.running = true;
+    let startTime = Date.now();
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      b.progress = Math.min(100, (elapsed / b.duration) * 100);
+      const bar = document.getElementById(`bar-${b.id}`);
+      if (bar) bar.style.width = b.progress + '%';
+
+      if (elapsed >= b.duration) {
+        clearInterval(timer);
+        b.progress = 0;
+        b.running = false;
+        cash += b.basePayout * b.count;
+        render();
+      }
+    }, 50);
+  }
+
+  setInterval(render, 500);
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Alien Sky Invasion</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#030712; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:#020617; border:2px solid #38bdf8; border-radius:14px; box-shadow:0 0 35px rgba(56,189,248,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#38bdf8; letter-spacing:1.5px; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(2,6,23,0.85); padding:4px 16px; border-radius:20px; border:1px solid #38bdf8; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">🛸 ALIEN SKY INVASION // JET DOGFIGHT</div>
+    <div style="font-weight:bold; font-size:14px; color:#22c55e;" id="score-txt">SCORE: 0 | SHIELD: 100%</div>
+  </div>
+  <div class="controls-bar">[Arrow Keys / WASD] Pilot Jet | [Space/Click] Plasma Cannons | [Shift] Afterburner</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let jet = { x: 360, y: 380, vx: 0, vy: 0, shield: 100 };
+  let lasers = [];
+  let aliens = [];
+  let stars = [];
+  let score = 0;
+  let keys = {};
+
+  for (let i = 0; i < 60; i++) {
+    stars.push({ x: Math.random() * 720, y: Math.random() * 450, s: Math.random() * 2 + 1, sp: Math.random() * 2 + 1 });
+  }
+
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'Space') fireLaser();
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  canvas.addEventListener('click', fireLaser);
+
+  function fireLaser() {
+    lasers.push({ x: jet.x - 12, y: jet.y - 10, vy: -12 });
+    lasers.push({ x: jet.x + 12, y: jet.y - 10, vy: -12 });
+  }
+
+  function spawnAlien() {
+    if (aliens.length < 8) {
+      aliens.push({
+        x: Math.random() * 660 + 30,
+        y: -30,
+        vx: (Math.random() - 0.5) * 3,
+        vy: Math.random() * 1.5 + 1.2,
+        hp: 30,
+        type: Math.random() > 0.3 ? 'fighter' : 'cruiser'
+      });
+    }
+  }
+  setInterval(spawnAlien, 1200);
+
+  function loop() {
+    // Jet controls
+    if (keys['KeyA'] || keys['ArrowLeft']) jet.vx = -6;
+    else if (keys['KeyD'] || keys['ArrowRight']) jet.vx = 6;
+    else jet.vx *= 0.85;
+
+    if (keys['KeyW'] || keys['ArrowUp']) jet.vy = -5;
+    else if (keys['KeyS'] || keys['ArrowDown']) jet.vy = 5;
+    else jet.vy *= 0.85;
+
+    jet.x += jet.vx; jet.y += jet.vy;
+    jet.x = Math.max(20, Math.min(700, jet.x));
+    jet.y = Math.max(50, Math.min(420, jet.y));
+
+    // Stars
+    stars.forEach(s => {
+      s.y += s.sp;
+      if (s.y > 450) { s.y = 0; s.x = Math.random() * 720; }
+    });
+
+    // Lasers
+    for (let i = lasers.length - 1; i >= 0; i--) {
+      let l = lasers[i];
+      l.y += l.vy;
+      if (l.y < -10) lasers.splice(i, 1);
+    }
+
+    // Aliens
+    for (let i = aliens.length - 1; i >= 0; i--) {
+      let a = aliens[i];
+      a.x += a.vx; a.y += a.vy;
+      if (a.x < 20 || a.x > 700) a.vx *= -1;
+
+      // Laser collision
+      for (let j = lasers.length - 1; j >= 0; j--) {
+        let l = lasers[j];
+        if (Math.hypot(a.x - l.x, a.y - l.y) < 24) {
+          a.hp -= 15;
+          lasers.splice(j, 1);
+          if (a.hp <= 0) {
+            score += 150;
+            aliens.splice(i, 1);
+            break;
+          }
+        }
+      }
+
+      if (a && a.y > 470) aliens.splice(i, 1);
+    }
+
+    document.getElementById('score-txt').innerText = `SCORE: ${score} | SHIELD: ${jet.shield}%`;
+
+    // Render
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, 720, 450);
+
+    // Stars
+    ctx.fillStyle = '#94a3b8';
+    stars.forEach(s => { ctx.fillRect(s.x, s.y, s.s, s.s); });
+
+    // Lasers
+    ctx.fillStyle = '#38bdf8';
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 10;
+    lasers.forEach(l => { ctx.fillRect(l.x - 2, l.y, 4, 14); });
+    ctx.shadowBlur = 0;
+
+    // Aliens
+    aliens.forEach(a => {
+      ctx.fillStyle = a.type === 'fighter' ? '#f43f5e' : '#a855f7';
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.fillText('👾', a.x - 8, a.y + 4);
+    });
+
+    // Jet
+    ctx.save();
+    ctx.translate(jet.x, jet.y);
+    ctx.fillStyle = '#0284c7';
+    ctx.beginPath();
+    ctx.moveTo(0, -20); ctx.lineTo(16, 16); ctx.lineTo(0, 10); ctx.lineTo(-16, 16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Jet engine glow
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(-4, 10, 8, Math.random() * 12 + 6);
+    ctx.restore();
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Amazing Strange Rope Police</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0f172a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:#1e293b; border:2px solid #ef4444; border-radius:14px; box-shadow:0 0 35px rgba(239,68,68,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#ef4444; letter-spacing:1px; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(15,23,42,0.85); padding:4px 16px; border-radius:20px; border:1px solid #ef4444; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">🕷️ AMAZING STRANGE ROPE POLICE // VICE CITY</div>
+    <div style="font-weight:bold; font-size:14px; color:#facc15;" id="score-txt">GANGS BUSTED: 0 | STARS: ★☆☆☆☆</div>
+  </div>
+  <div class="controls-bar">[A/D] Move Hero | [W] Web Swing / Jump | [Space/Click] Laser Eyes / Web Shot</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let hero = { x: 100, y: 350, vx: 0, vy: 0, w: 24, h: 36, swinging: false };
+  let buildings = [
+    { x: 20, y: 150, w: 100, h: 300 },
+    { x: 160, y: 100, w: 120, h: 350 },
+    { x: 320, y: 180, w: 110, h: 270 },
+    { x: 470, y: 80, w: 130, h: 370 },
+    { x: 640, y: 160, w: 100, h: 290 }
+  ];
+  let thugs = [];
+  let webs = [];
+  let score = 0;
+  let keys = {};
+
+  for (let i = 0; i < 4; i++) {
+    thugs.push({ x: Math.random() * 600 + 60, y: 400, vx: (Math.random() - 0.5) * 2, hp: 20 });
+  }
+
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+      hero.vy = -12;
+      hero.swinging = true;
+    }
+    if (e.code === 'Space') fireWeb();
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  canvas.addEventListener('click', fireWeb);
+
+  function fireWeb() {
+    webs.push({ x: hero.x + 12, y: hero.y + 12, vx: 12 });
+  }
+
+  function loop() {
+    if (keys['KeyA'] || keys['ArrowLeft']) hero.vx = -5;
+    else if (keys['KeyD'] || keys['ArrowRight']) hero.vx = 5;
+    else hero.vx *= 0.85;
+
+    hero.vy += 0.55;
+    hero.x += hero.vx;
+    hero.y += hero.vy;
+
+    if (hero.y > 400) { hero.y = 400; hero.vy = 0; hero.swinging = false; }
+    if (hero.x < 0) hero.x = 0; if (hero.x > 700) hero.x = 700;
+
+    // Webs
+    for (let i = webs.length - 1; i >= 0; i--) {
+      let w = webs[i];
+      w.x += w.vx;
+      thugs.forEach((t, tidx) => {
+        if (Math.hypot(w.x - t.x, w.y - t.y) < 24) {
+          t.hp -= 20;
+          webs.splice(i, 1);
+          if (t.hp <= 0) {
+            score++;
+            thugs[tidx] = { x: Math.random() * 600 + 60, y: 400, vx: (Math.random() - 0.5) * 2, hp: 20 };
+          }
+        }
+      });
+      if (w.x > 740) webs.splice(i, 1);
+    }
+
+    document.getElementById('score-txt').innerText = `GANGS BUSTED: ${score} | HERO LEVEL: ${score + 1}`;
+
+    // Render Cityscape
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, 0, 720, 450);
+
+    // Skyline
+    buildings.forEach(b => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.strokeStyle = '#334155';
+      ctx.strokeRect(b.x, b.y, b.w, b.h);
+      // Windows
+      ctx.fillStyle = '#facc15';
+      for (let wx = b.x + 10; wx < b.x + b.w - 10; wx += 20) {
+        for (let wy = b.y + 15; wy < b.y + b.h - 20; wy += 30) {
+          if (Math.sin(wx * wy) > 0) ctx.fillRect(wx, wy, 10, 15);
+        }
+      }
+    });
+
+    // Thugs
+    thugs.forEach(t => {
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(t.x, t.y, 20, 30);
+      ctx.fillStyle = '#fff';
+      ctx.fillText('🦹', t.x + 2, t.y + 15);
+    });
+
+    // Webs / Lasers
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    webs.forEach(w => {
+      ctx.beginPath();
+      ctx.moveTo(hero.x, hero.y);
+      ctx.lineTo(w.x, w.y);
+      ctx.stroke();
+    });
+
+    // Hero (Spider Rope Guy)
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(hero.x, hero.y, hero.w, hero.h);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(hero.x + 4, hero.y + 6, 16, 18);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🕷️', hero.x + 4, hero.y + 20);
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

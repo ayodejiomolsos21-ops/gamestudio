@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Angry Birds Showdown</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0f172a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:linear-gradient(180deg, #4338ca 0%, #3b82f6 65%, #047857 65%, #064e3b 100%); border:2px solid #ec4899; border-radius:14px; box-shadow:0 0 35px rgba(236,72,153,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; cursor:crosshair; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#f472b6; letter-spacing:1px; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(15,23,42,0.85); padding:4px 16px; border-radius:20px; border:1px solid #ec4899; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">⚔️ ANGRY BIRDS SHOWDOWN // 1V1 DUEL ARENA</div>
+    <div style="font-weight:bold; font-size:14px; color:#fde047;" id="score-txt">PLAYER HP: 100% | ENEMY HP: 100%</div>
+  </div>
+  <div class="controls-bar">Slingshot Bird to destroy the opponent's Pig Fortress before they destroy yours!</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  const sling = { x: 100, y: 260 };
+  let bird = { x: 100, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+  let enemyBird = { x: 620, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+  let dragging = false;
+  let playerHP = 100;
+  let enemyHP = 100;
+
+  canvas.addEventListener('mousedown', e => {
+    if (!bird.launched) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (720 / rect.width);
+      const my = (e.clientY - rect.top) * (450 / rect.height);
+      if (Math.hypot(mx - sling.x, my - sling.y) < 40) dragging = true;
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (dragging && !bird.launched) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (720 / rect.width);
+      const my = (e.clientY - rect.top) * (450 / rect.height);
+      const angle = Math.atan2(my - sling.y, mx - sling.x);
+      const dist = Math.min(65, Math.hypot(mx - sling.x, my - sling.y));
+      bird.x = sling.x + Math.cos(angle) * dist;
+      bird.y = sling.y + Math.sin(angle) * dist;
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    if (dragging && !bird.launched) {
+      dragging = false;
+      bird.launched = true;
+      bird.vx = (sling.x - bird.x) * 0.3;
+      bird.vy = (sling.y - bird.y) * 0.3;
+    }
+  });
+
+  function resetPlayer() {
+    bird = { x: 100, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+  }
+
+  function launchEnemy() {
+    if (!enemyBird.launched) {
+      enemyBird.launched = true;
+      enemyBird.vx = -(Math.random() * 8 + 6);
+      enemyBird.vy = -(Math.random() * 8 + 4);
+    }
+  }
+  setInterval(launchEnemy, 3500);
+
+  function loop() {
+    // Player Bird
+    if (bird.launched) {
+      bird.vy += 0.45;
+      bird.x += bird.vx;
+      bird.y += bird.vy;
+
+      if (bird.x > 560 && bird.y > 180) {
+        enemyHP = Math.max(0, enemyHP - 25);
+        resetPlayer();
+      }
+
+      if (bird.x > 740 || bird.y > 300) {
+        setTimeout(resetPlayer, 1000);
+      }
+    }
+
+    // Enemy Bird
+    if (enemyBird.launched) {
+      enemyBird.vy += 0.45;
+      enemyBird.x += enemyBird.vx;
+      enemyBird.y += enemyBird.vy;
+
+      if (enemyBird.x < 160 && enemyBird.y > 180) {
+        playerHP = Math.max(0, playerHP - 20);
+        enemyBird = { x: 620, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+      }
+
+      if (enemyBird.x < -20 || enemyBird.y > 300) {
+        enemyBird = { x: 620, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+      }
+    }
+
+    document.getElementById('score-txt').innerText = `PLAYER HP: ${playerHP}% | ENEMY HP: ${enemyHP}% ${enemyHP === 0 ? '🏆 VICTORY!' : ''}`;
+
+    // Render
+    ctx.clearRect(0, 0, 720, 450);
+
+    // Player base
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(40, 200, 60, 100);
+    // Enemy base
+    ctx.fillStyle = '#991b1b';
+    ctx.fillRect(620, 200, 60, 100);
+
+    // Birds
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#84cc16';
+    ctx.beginPath();
+    ctx.arc(enemyBird.x, enemyBird.y, enemyBird.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

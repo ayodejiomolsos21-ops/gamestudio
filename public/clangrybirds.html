@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Angry Birds</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0f172a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:linear-gradient(180deg, #38bdf8 0%, #bae6fd 65%, #65a30d 65%, #4d7c0f 100%); border:2px solid #ef4444; border-radius:14px; box-shadow:0 0 35px rgba(239,68,68,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; cursor:crosshair; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#b91c1c; letter-spacing:1px; text-shadow:0 1px 2px #fff; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(15,23,42,0.85); padding:4px 16px; border-radius:20px; border:1px solid #ef4444; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">🔴 ANGRY BIRDS CLASSIC // PIGGY FORTRESS</div>
+    <div style="font-weight:bold; font-size:14px; color:#15803d;" id="score-txt">SCORE: 0 | PIGS REMAINING: 3</div>
+  </div>
+  <div class="controls-bar">Drag Slingshot to Aim & Power | Release to Launch Red!</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  const sling = { x: 120, y: 260 };
+  let bird = { x: 120, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+  let dragging = false;
+  let score = 0;
+
+  let blocks = [
+    { x: 520, y: 240, w: 20, h: 80, hp: 40, color: '#b45309' },
+    { x: 590, y: 240, w: 20, h: 80, hp: 40, color: '#b45309' },
+    { x: 510, y: 220, w: 110, h: 20, hp: 40, color: '#b45309' },
+    { x: 550, y: 150, w: 20, h: 70, hp: 30, color: '#94a3b8' }
+  ];
+
+  let pigs = [
+    { x: 555, y: 270, r: 14, alive: true },
+    { x: 555, y: 130, r: 12, alive: true },
+    { x: 640, y: 270, r: 14, alive: true }
+  ];
+
+  canvas.addEventListener('mousedown', e => {
+    if (!bird.launched) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (720 / rect.width);
+      const my = (e.clientY - rect.top) * (450 / rect.height);
+      if (Math.hypot(mx - sling.x, my - sling.y) < 40) dragging = true;
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (dragging && !bird.launched) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (720 / rect.width);
+      const my = (e.clientY - rect.top) * (450 / rect.height);
+      const angle = Math.atan2(my - sling.y, mx - sling.x);
+      const dist = Math.min(65, Math.hypot(mx - sling.x, my - sling.y));
+      bird.x = sling.x + Math.cos(angle) * dist;
+      bird.y = sling.y + Math.sin(angle) * dist;
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    if (dragging && !bird.launched) {
+      dragging = false;
+      bird.launched = true;
+      bird.vx = (sling.x - bird.x) * 0.28;
+      bird.vy = (sling.y - bird.y) * 0.28;
+    }
+  });
+
+  function resetBird() {
+    bird = { x: 120, y: 260, r: 16, vx: 0, vy: 0, launched: false };
+  }
+
+  function loop() {
+    if (bird.launched) {
+      bird.vy += 0.45;
+      bird.x += bird.vx;
+      bird.y += bird.vy;
+
+      // Ground collision
+      if (bird.y > 290) {
+        bird.y = 290;
+        bird.vy = -bird.vy * 0.4;
+        bird.vx *= 0.8;
+      }
+
+      // Block collision
+      blocks.forEach(b => {
+        if (bird.x + bird.r > b.x && bird.x - bird.r < b.x + b.w &&
+            bird.y + bird.r > b.y && bird.y - bird.r < b.y + b.h) {
+          b.hp -= Math.hypot(bird.vx, bird.vy) * 4;
+          bird.vx *= 0.6;
+        }
+      });
+
+      // Pig collision
+      pigs.forEach(p => {
+        if (p.alive && Math.hypot(bird.x - p.x, bird.y - p.y) < bird.r + p.r) {
+          p.alive = false;
+          score += 5000;
+        }
+      });
+
+      if (bird.x > 750 || (Math.abs(bird.vx) < 0.2 && Math.abs(bird.vy) < 0.2 && bird.y >= 290)) {
+        setTimeout(resetBird, 1500);
+      }
+    }
+
+    const remainingPigs = pigs.filter(p => p.alive).length;
+    document.getElementById('score-txt').innerText = `SCORE: ${score} | PIGS REMAINING: ${remainingPigs}`;
+
+    // Render
+    ctx.clearRect(0, 0, 720, 450);
+
+    // Slingshot band
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(sling.x - 10, sling.y);
+    ctx.lineTo(bird.x, bird.y);
+    ctx.lineTo(sling.x + 10, sling.y);
+    ctx.stroke();
+
+    // Slingshot post
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(sling.x - 8, sling.y, 16, 60);
+
+    // Blocks
+    blocks.forEach(b => {
+      if (b.hp > 0) {
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+      }
+    });
+
+    // Pigs
+    pigs.forEach(p => {
+      if (p.alive) {
+        ctx.fillStyle = '#84cc16';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#4d7c0f';
+        ctx.fillRect(p.x - 6, p.y - 2, 12, 6);
+        ctx.fillStyle = '#000';
+        ctx.fillText('👀', p.x - 7, p.y - 4);
+      }
+    });
+
+    // Red Bird
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.moveTo(bird.x + 8, bird.y - 4); ctx.lineTo(bird.x + 18, bird.y); ctx.lineTo(bird.x + 8, bird.y + 4);
+    ctx.fill();
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

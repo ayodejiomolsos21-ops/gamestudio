@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Amidst The Sky</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0369a1; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%); border:2px solid #fff; border-radius:14px; box-shadow:0 0 35px rgba(255,255,255,0.4); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#0369a1; letter-spacing:1.5px; text-shadow:0 1px 2px #fff; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#0369a1; font-weight:bold; background:rgba(255,255,255,0.9); padding:4px 16px; border-radius:20px; border:1px solid #38bdf8; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">☁️ AMIDST THE SKY // GLIDER SOARING</div>
+    <div style="font-weight:bold; font-size:14px; color:#0284c7;" id="score-txt">ORBS: 0 | ALTITUDE: 1500m</div>
+  </div>
+  <div class="controls-bar">[W/S] Pitch Glider Up/Down | [A/D] Bank Left/Right | Catch Updrafts & Celestial Orbs</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let glider = { x: 360, y: 220, vy: 0, vx: 0, pitch: 0 };
+  let orbs = [];
+  let clouds = [];
+  let score = 0;
+  let keys = {};
+
+  for (let i = 0; i < 8; i++) {
+    clouds.push({ x: Math.random() * 720, y: Math.random() * 400, r: Math.random() * 30 + 20, sp: Math.random() * 0.8 + 0.4 });
+  }
+
+  for (let i = 0; i < 6; i++) {
+    orbs.push({ x: Math.random() * 700 + 10, y: Math.random() * 400 + 20 });
+  }
+
+  window.addEventListener('keydown', e => { keys[e.code] = true; });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function loop() {
+    if (keys['KeyW'] || keys['ArrowUp']) glider.vy = Math.max(-4, glider.vy - 0.2);
+    else if (keys['KeyS'] || keys['ArrowDown']) glider.vy = Math.min(4, glider.vy + 0.2);
+    else glider.vy *= 0.95;
+
+    if (keys['KeyA'] || keys['ArrowLeft']) glider.vx = Math.max(-5, glider.vx - 0.2);
+    else if (keys['KeyD'] || keys['ArrowRight']) glider.vx = Math.min(5, glider.vx + 0.2);
+    else glider.vx *= 0.95;
+
+    glider.x += glider.vx;
+    glider.y += glider.vy;
+
+    glider.x = Math.max(30, Math.min(690, glider.x));
+    glider.y = Math.max(30, Math.min(410, glider.y));
+
+    // Clouds
+    clouds.forEach(c => {
+      c.x -= c.sp;
+      if (c.x < -60) c.x = 780;
+    });
+
+    // Orbs
+    for (let i = orbs.length - 1; i >= 0; i--) {
+      let o = orbs[i];
+      if (Math.hypot(glider.x - o.x, glider.y - o.y) < 32) {
+        score += 100;
+        orbs[i] = { x: Math.random() * 700 + 10, y: Math.random() * 400 + 20 };
+      }
+    }
+
+    document.getElementById('score-txt').innerText = `ORBS: ${score} | SPEED: ${Math.floor(Math.hypot(glider.vx, glider.vy) * 20 + 80)} KM/H`;
+
+    // Render Sky
+    ctx.fillStyle = '#7dd3fc';
+    ctx.fillRect(0, 0, 720, 450);
+
+    // Floating Clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    clouds.forEach(c => {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.arc(c.x + 25, c.y - 10, c.r * 0.8, 0, Math.PI * 2);
+      ctx.arc(c.x - 20, c.y + 5, c.r * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Orbs
+    orbs.forEach(o => {
+      ctx.fillStyle = '#fde047';
+      ctx.shadowColor = '#fde047';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    // Glider / Bird
+    ctx.save();
+    ctx.translate(glider.x, glider.y);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(18, 0); ctx.lineTo(-14, -14); ctx.lineTo(-8, 0); ctx.lineTo(-14, 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

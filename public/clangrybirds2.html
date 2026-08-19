@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Angry Birds 2</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0f172a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:linear-gradient(180deg, #6366f1 0%, #ec4899 65%, #15803d 65%, #14532d 100%); border:2px solid #eab308; border-radius:14px; box-shadow:0 0 35px rgba(234,179,8,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; cursor:crosshair; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#fde047; letter-spacing:1px; text-shadow:0 2px 4px rgba(0,0,0,0.6); }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(15,23,42,0.85); padding:4px 16px; border-radius:20px; border:1px solid #eab308; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">⚡ ANGRY BIRDS 2 // MULTI-STAGE DESTRUCTION</div>
+    <div style="font-weight:bold; font-size:14px; color:#fde047;" id="score-txt">SCORE: 0 | ACTIVE BIRD: CHUCK ⚡</div>
+  </div>
+  <div class="controls-bar">Slingshot Bird | Click MID-AIR to activate Speed Boost / Bomb Explosion!</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  const sling = { x: 120, y: 260 };
+  let birdTypes = ['chuck', 'bomb', 'red'];
+  let currentType = 0;
+  let bird = { x: 120, y: 260, r: 16, vx: 0, vy: 0, launched: false, boosted: false };
+  let dragging = false;
+  let score = 0;
+  let explosions = [];
+
+  let blocks = [
+    { x: 500, y: 200, w: 20, h: 120, hp: 60, color: '#0284c7' }, // Glass
+    { x: 580, y: 200, w: 20, h: 120, hp: 80, color: '#475569' }, // Stone
+    { x: 490, y: 180, w: 120, h: 20, hp: 60, color: '#b45309' }, // Wood
+    { x: 540, y: 100, w: 20, h: 80, hp: 40, color: '#0284c7' }
+  ];
+
+  let pigs = [
+    { x: 540, y: 260, r: 16, alive: true, boss: false },
+    { x: 540, y: 70, r: 22, alive: true, boss: true } // King Pig
+  ];
+
+  canvas.addEventListener('mousedown', e => {
+    if (!bird.launched) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (720 / rect.width);
+      const my = (e.clientY - rect.top) * (450 / rect.height);
+      if (Math.hypot(mx - sling.x, my - sling.y) < 40) dragging = true;
+    } else if (!bird.boosted) {
+      // Ability trigger
+      bird.boosted = true;
+      const bType = birdTypes[currentType];
+      if (bType === 'chuck') {
+        bird.vx *= 2.4;
+        bird.vy *= 0.5;
+      } else if (bType === 'bomb') {
+        explosions.push({ x: bird.x, y: bird.y, r: 10, maxR: 70 });
+        blocks.forEach(b => { if (Math.hypot(bird.x - b.x, bird.y - b.y) < 90) b.hp = 0; });
+        pigs.forEach(p => { if (Math.hypot(bird.x - p.x, bird.y - p.y) < 90) p.alive = false; });
+      }
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (dragging && !bird.launched) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (720 / rect.width);
+      const my = (e.clientY - rect.top) * (450 / rect.height);
+      const angle = Math.atan2(my - sling.y, mx - sling.x);
+      const dist = Math.min(70, Math.hypot(mx - sling.x, my - sling.y));
+      bird.x = sling.x + Math.cos(angle) * dist;
+      bird.y = sling.y + Math.sin(angle) * dist;
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    if (dragging && !bird.launched) {
+      dragging = false;
+      bird.launched = true;
+      bird.vx = (sling.x - bird.x) * 0.32;
+      bird.vy = (sling.y - bird.y) * 0.32;
+    }
+  });
+
+  function resetBird() {
+    currentType = (currentType + 1) % birdTypes.length;
+    bird = { x: 120, y: 260, r: 16, vx: 0, vy: 0, launched: false, boosted: false };
+  }
+
+  function loop() {
+    if (bird.launched) {
+      bird.vy += 0.45;
+      bird.x += bird.vx;
+      bird.y += bird.vy;
+
+      if (bird.y > 290) {
+        bird.y = 290;
+        bird.vy = -bird.vy * 0.3;
+        bird.vx *= 0.7;
+      }
+
+      blocks.forEach(b => {
+        if (bird.x + bird.r > b.x && bird.x - bird.r < b.x + b.w &&
+            bird.y + bird.r > b.y && bird.y - bird.r < b.y + b.h) {
+          b.hp -= Math.hypot(bird.vx, bird.vy) * 6;
+          bird.vx *= 0.6;
+        }
+      });
+
+      pigs.forEach(p => {
+        if (p.alive && Math.hypot(bird.x - p.x, bird.y - p.y) < bird.r + p.r) {
+          p.alive = false;
+          score += p.boss ? 15000 : 5000;
+        }
+      });
+
+      if (bird.x > 750 || (Math.abs(bird.vx) < 0.2 && Math.abs(bird.vy) < 0.2 && bird.y >= 290)) {
+        setTimeout(resetBird, 1500);
+      }
+    }
+
+    // Explosions
+    for (let i = explosions.length - 1; i >= 0; i--) {
+      let ex = explosions[i];
+      ex.r += 4;
+      if (ex.r > ex.maxR) explosions.splice(i, 1);
+    }
+
+    const bName = birdTypes[currentType].toUpperCase();
+    document.getElementById('score-txt').innerText = `SCORE: ${score} | BIRD: ${bName} ${bName === 'CHUCK' ? '⚡' : '💣'}`;
+
+    // Render
+    ctx.clearRect(0, 0, 720, 450);
+
+    // Slingshot
+    ctx.strokeStyle = '#451a03';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(sling.x - 10, sling.y);
+    ctx.lineTo(bird.x, bird.y);
+    ctx.lineTo(sling.x + 10, sling.y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#451a03';
+    ctx.fillRect(sling.x - 8, sling.y, 16, 60);
+
+    // Blocks
+    blocks.forEach(b => {
+      if (b.hp > 0) {
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+      }
+    });
+
+    // Pigs
+    pigs.forEach(p => {
+      if (p.alive) {
+        ctx.fillStyle = p.boss ? '#65a30d' : '#84cc16';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (p.boss) {
+          ctx.fillStyle = '#facc15';
+          ctx.fillText('👑', p.x - 8, p.y - p.r + 4);
+        }
+      }
+    });
+
+    // Explosions
+    explosions.forEach(ex => {
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+      ctx.beginPath();
+      ctx.arc(ex.x, ex.y, ex.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Bird
+    ctx.fillStyle = birdTypes[currentType] === 'chuck' ? '#eab308' : (birdTypes[currentType] === 'bomb' ? '#0f172a' : '#ef4444');
+    ctx.beginPath();
+    ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

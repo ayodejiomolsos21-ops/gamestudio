@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Allocation</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#0f172a; color:#fff; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:16px; }
+  #colony-box { width:100%; max-width:800px; background:#1e293b; border:2px solid #a855f7; border-radius:16px; padding:20px; box-shadow:0 0 35px rgba(168,85,247,0.3); display:flex; flex-direction:column; gap:16px; }
+  .header { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #334155; padding-bottom:12px; }
+  .title { font-size:18px; font-weight:900; color:#c084fc; letter-spacing:1px; }
+  .workers-badge { font-size:16px; font-weight:bold; color:#facc15; }
+  .sectors-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+  .sector-card { background:#0f172a; border:1px solid #334155; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .sector-header { display:flex; justify-content:space-between; font-weight:bold; font-size:14px; color:#e2e8f0; }
+  .alloc-controls { display:flex; align-items:center; justify-content:space-between; }
+  .btn-circle { width:32px; height:32px; border-radius:50%; background:#334155; color:#fff; border:none; font-size:18px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+  .btn-circle:hover { background:#a855f7; }
+  .output-rate { font-size:12px; color:#a855f7; font-weight:bold; }
+  .res-bar { display:flex; justify-content:space-between; background:#0f172a; padding:12px; border-radius:10px; border:1px solid #334155; font-size:13px; font-weight:bold; }
+</style>
+</head>
+<body>
+<div id="colony-box">
+  <div class="header">
+    <div class="title">⚡ ALLOCATION // COLONY RESOURCE HUB</div>
+    <div class="workers-badge" id="workers-txt">AVAILABLE DRONES: 5 / 10</div>
+  </div>
+
+  <div class="res-bar">
+    <div>🔋 Energy: <span id="energy-val" style="color:#38bdf8;">100</span></div>
+    <div>🌾 Biomass: <span id="bio-val" style="color:#4ade80;">100</span></div>
+    <div>⚙️ Titanium: <span id="metal-val" style="color:#fb923c;">100</span></div>
+    <div>🧬 Research: <span id="sci-val" style="color:#c084fc;">0</span></div>
+  </div>
+
+  <div class="sectors-grid" id="sectors-container"></div>
+</div>
+
+<script>
+  let totalDrones = 10;
+  let energy = 100, biomass = 100, metal = 100, research = 0;
+
+  const sectors = [
+    { id: 'solar', name: 'Solar Arrays', icon: '☀️', drones: 2, yieldRes: 'energy', yieldAmt: 4 },
+    { id: 'hydro', name: 'Hydroponics Dome', icon: '🌱', drones: 2, yieldRes: 'biomass', yieldAmt: 3 },
+    { id: 'mine', name: 'Titanium Drills', icon: '⛏️', drones: 1, yieldRes: 'metal', yieldAmt: 2 },
+    { id: 'lab', name: 'Quantum Laboratory', icon: '🔬', drones: 0, yieldRes: 'research', yieldAmt: 1 }
+  ];
+
+  function getAssignedDrones() {
+    return sectors.reduce((acc, s) => acc + s.drones, 0);
+  }
+
+  function render() {
+    const free = totalDrones - getAssignedDrones();
+    document.getElementById('workers-txt').innerText = `AVAILABLE DRONES: ${free} / ${totalDrones}`;
+    document.getElementById('energy-val').innerText = Math.floor(energy);
+    document.getElementById('bio-val').innerText = Math.floor(biomass);
+    document.getElementById('metal-val').innerText = Math.floor(metal);
+    document.getElementById('sci-val').innerText = Math.floor(research);
+
+    const container = document.getElementById('sectors-container');
+    container.innerHTML = '';
+
+    sectors.forEach((s, idx) => {
+      const card = document.createElement('div');
+      card.className = 'sector-card';
+      card.innerHTML = `
+        <div class="sector-header"><span>${s.icon} ${s.name}</span> <span style="color:#c084fc;">${s.drones} Drones</span></div>
+        <div class="output-rate">Production: +${s.drones * s.yieldAmt}/sec (${s.yieldRes})</div>
+        <div class="alloc-controls">
+          <button class="btn-circle" onclick="changeDrones(${idx}, -1)">-</button>
+          <span style="font-size:16px; font-weight:bold;">${s.drones}</span>
+          <button class="btn-circle" onclick="changeDrones(${idx}, 1)">+</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function changeDrones(idx, delta) {
+    const free = totalDrones - getAssignedDrones();
+    const s = sectors[idx];
+    if (delta > 0 && free > 0) s.drones++;
+    else if (delta < 0 && s.drones > 0) s.drones--;
+    render();
+  }
+
+  setInterval(() => {
+    sectors.forEach(s => {
+      if (s.yieldRes === 'energy') energy += s.drones * s.yieldAmt;
+      if (s.yieldRes === 'biomass') biomass += s.drones * s.yieldAmt;
+      if (s.yieldRes === 'metal') metal += s.drones * s.yieldAmt;
+      if (s.yieldRes === 'research') research += s.drones * s.yieldAmt;
+    });
+    // Colony consumption
+    energy = Math.max(0, energy - 2);
+    biomass = Math.max(0, biomass - 2);
+    render();
+  }, 1000);
+
+  render();
+</script>
+</body>
+</html>

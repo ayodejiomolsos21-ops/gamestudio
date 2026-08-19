@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Among Us</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#030712; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:#0b0f19; border:2px solid #ef4444; border-radius:14px; box-shadow:0 0 35px rgba(239,68,68,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .title-txt { font-size:16px; font-weight:900; color:#ef4444; letter-spacing:1.5px; }
+  .controls-bar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#fff; background:rgba(11,15,25,0.9); padding:4px 16px; border-radius:20px; border:1px solid #334155; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="title-txt">🚀 AMONG US // SKELD MISSION</div>
+    <div style="font-weight:bold; font-size:14px; color:#22c55e;" id="task-txt">TOTAL TASKS: 0 / 4 COMPLETED</div>
+  </div>
+  <div class="controls-bar">[WASD / Arrow Keys] Move Crewmate | [E / Space] Fix Wiring / Complete Task</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let crew = { x: 120, y: 225, vx: 0, vy: 0, color: '#ef4444' };
+  let tasks = [
+    { x: 160, y: 100, name: 'Fix Wiring 🔌', done: false },
+    { x: 560, y: 120, name: 'Divert Power ⚡', done: false },
+    { x: 520, y: 340, name: 'Calibrate Shields 🛡️', done: false },
+    { x: 220, y: 350, name: 'Clear Asteroids 🪨', done: false }
+  ];
+  let impostor = { x: 600, y: 225, vx: -1.5, vy: 0 };
+  let keys = {};
+
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'KeyE' || e.code === 'Space') {
+      tasks.forEach(t => {
+        if (!t.done && Math.hypot(crew.x - t.x, crew.y - t.y) < 45) {
+          t.done = true;
+        }
+      });
+    }
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function loop() {
+    if (keys['KeyA'] || keys['ArrowLeft']) crew.vx = -4;
+    else if (keys['KeyD'] || keys['ArrowRight']) crew.vx = 4;
+    else crew.vx *= 0.8;
+
+    if (keys['KeyW'] || keys['ArrowUp']) crew.vy = -4;
+    else if (keys['KeyS'] || keys['ArrowDown']) crew.vy = 4;
+    else crew.vy *= 0.8;
+
+    crew.x += crew.vx; crew.y += crew.vy;
+    crew.x = Math.max(30, Math.min(690, crew.x));
+    crew.y = Math.max(30, Math.min(420, crew.y));
+
+    // Impostor patrol
+    impostor.x += impostor.vx;
+    if (impostor.x < 100 || impostor.x > 620) impostor.vx *= -1;
+
+    const completed = tasks.filter(t => t.done).length;
+    document.getElementById('task-txt').innerText = `TOTAL TASKS: ${completed} / 4 ${completed === 4 ? '🎉 VICTORY!' : ''}`;
+
+    // Render Ship Floor
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, 720, 450);
+
+    // Corridors & rooms
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(40, 40, 640, 370);
+    ctx.beginPath();
+    ctx.moveTo(360, 40); ctx.lineTo(360, 410);
+    ctx.stroke();
+
+    // Tasks
+    tasks.forEach(t => {
+      ctx.fillStyle = t.done ? '#22c55e' : '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(t.name, t.x - 30, t.y - 18);
+    });
+
+    // Impostor
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(impostor.x, impostor.y, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(impostor.x - 4, impostor.y - 6, 12, 6);
+
+    // Player (Red Bean)
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(crew.x, crew.y, 16, 0, Math.PI * 2);
+    ctx.fill();
+    // Visor
+    ctx.fillStyle = '#7dd3fc';
+    ctx.fillRect(crew.x + 2, crew.y - 6, 10, 8);
+    // Backpack
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(crew.x - 18, crew.y - 8, 6, 16);
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>A Dark Room</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Courier New', Courier, monospace; }
+  body { background:#0a0a0c; color:#d4d4d8; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:20px; overflow-x:hidden; }
+  #game-box { width:100%; max-width:850px; min-height:550px; background:#121216; border:1px solid #27272a; border-radius:12px; padding:24px; display:grid; grid-template-columns: 260px 1fr; gap:24px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+  @media(max-width:700px){ #game-box { grid-template-columns: 1fr; } }
+  .sidebar { border-right:1px solid #27272a; padding-right:20px; display:flex; flex-direction:column; gap:16px; }
+  .main-panel { display:flex; flex-direction:column; gap:16px; }
+  .header-title { font-size:18px; font-weight:bold; color:#f43f5e; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+  .status-text { font-size:14px; color:#a1a1aa; line-height:1.5; min-height:48px; border-left:2px solid #e11d48; padding-left:10px; }
+  .btn-group { display:flex; flex-direction:column; gap:10px; }
+  button { background:#18181b; color:#fafafa; border:1px solid #3f3f46; padding:10px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:bold; transition:all 0.15s; text-align:left; display:flex; justify-content:space-between; }
+  button:hover:not(:disabled) { background:#27272a; border-color:#f43f5e; color:#fff; transform:translateX(2px); }
+  button:disabled { opacity:0.35; cursor:not-allowed; }
+  .log-box { flex:1; min-height:220px; max-height:260px; overflow-y:auto; background:#09090b; border:1px solid #27272a; border-radius:6px; padding:12px; font-size:12px; line-height:1.6; display:flex; flex-direction:column-reverse; gap:4px; }
+  .log-entry { color:#71717a; }
+  .log-entry.highlight { color:#fb7185; }
+  .log-entry.important { color:#38bdf8; font-weight:bold; }
+  .res-list { font-size:13px; display:flex; flex-direction:column; gap:6px; background:#09090b; padding:12px; border-radius:6px; border:1px solid #27272a; }
+  .res-item { display:flex; justify-content:space-between; }
+  .res-val { color:#38bdf8; font-weight:bold; }
+  .tab-nav { display:flex; gap:8px; border-bottom:1px solid #27272a; padding-bottom:8px; }
+  .tab-btn { background:transparent; border:none; color:#71717a; padding:6px 12px; font-size:13px; cursor:pointer; border-radius:4px; }
+  .tab-btn.active { color:#f43f5e; font-weight:bold; background:#18181b; }
+</style>
+</head>
+<body>
+<div id="game-box">
+  <div class="sidebar">
+    <div class="header-title">A Dark Room</div>
+    <div class="res-list">
+      <div style="font-weight:bold; color:#a1a1aa; margin-bottom:4px; font-size:11px; text-transform:uppercase;">Stores</div>
+      <div class="res-item"><span>Wood:</span> <span class="res-val" id="wood-val">0</span></div>
+      <div class="res-item"><span>Fur:</span> <span class="res-val" id="fur-val">0</span></div>
+      <div class="res-item"><span>Meat:</span> <span class="res-val" id="meat-val">0</span></div>
+      <div class="res-item"><span>Teeth:</span> <span class="res-val" id="teeth-val">0</span></div>
+      <div class="res-item"><span>Torch:</span> <span class="res-val" id="torch-val">0</span></div>
+      <div class="res-item"><span>Traps:</span> <span class="res-val" id="traps-val">0</span></div>
+    </div>
+    <div class="res-list" id="villagers-box" style="display:none;">
+      <div style="font-weight:bold; color:#a1a1aa; margin-bottom:4px; font-size:11px; text-transform:uppercase;">Population</div>
+      <div class="res-item"><span>Villagers:</span> <span class="res-val" id="villagers-val">0</span></div>
+      <div class="res-item"><span>Huts:</span> <span class="res-val" id="huts-val">0</span></div>
+    </div>
+  </div>
+
+  <div class="main-panel">
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tab-room" onclick="setTab('room')">A Dark Room</button>
+      <button class="tab-btn" id="tab-forest" style="display:none;" onclick="setTab('forest')">Silent Forest</button>
+      <button class="tab-btn" id="tab-map" style="display:none;" onclick="setTab('map')">Dusty Path</button>
+    </div>
+
+    <div class="status-text" id="fire-status">the fire is dead. the room is freezing cold.</div>
+
+    <div class="btn-group" id="room-controls">
+      <button id="btn-light-fire" onclick="stokeFire()"><span>Light Fire</span> <span>[1 Wood]</span></button>
+      <button id="btn-stoke-fire" style="display:none;" onclick="stokeFire()"><span>Stoke Fire</span> <span>[1 Wood]</span></button>
+      <button id="btn-gather-wood" onclick="gatherWood()"><span>Gather Wood</span> <span id="gather-cooldown"></span></button>
+      <button id="btn-check-traps" style="display:none;" onclick="checkTraps()"><span>Check Traps</span></button>
+      <button id="btn-build-trap" style="display:none;" onclick="buildTrap()"><span>Build Trap</span> <span>[10 Wood]</span></button>
+      <button id="btn-build-hut" style="display:none;" onclick="buildHut()"><span>Build Hut</span> <span>[100 Wood]</span></button>
+    </div>
+
+    <div class="btn-group" id="forest-controls" style="display:none;">
+      <button onclick="craftTorch()"><span>Craft Torch</span> <span>[5 Wood]</span></button>
+      <button onclick="exploreForest()"><span>Explore Deeper</span> <span>[1 Torch]</span></button>
+    </div>
+
+    <div class="btn-group" id="map-controls" style="display:none;">
+      <button onclick="scoutOutpost()"><span>Scout Abandoned Outpost</span> <span>[10 Meat, 2 Torch]</span></button>
+      <button onclick="scoutMine()"><span>Venture into Iron Mine</span> <span>[25 Meat, 5 Torch]</span></button>
+    </div>
+
+    <div class="log-box" id="event-log">
+      <div class="log-entry highlight">the room is cold. the fire is dead.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let state = {
+    wood: 5, fur: 0, meat: 0, teeth: 0, torch: 0, traps: 0, huts: 0, villagers: 0,
+    fireLevel: 0, // 0: dead, 1: smoldering, 2: flickering, 3: burning, 4: roaring
+    activeTab: 'room',
+    gatherCooldown: false
+  };
+
+  const fireTexts = [
+    "the fire is dead. the room is freezing cold.",
+    "the fire is smoldering. tiny embers glow.",
+    "the fire is flickering. a faint warmth returns.",
+    "the fire is burning brightly. the shadows dance.",
+    "the fire is roaring. the cabin is warm."
+  ];
+
+  function addLog(text, type = '') {
+    const log = document.getElementById('event-log');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.innerText = text;
+    log.prepend(entry);
+  }
+
+  function updateUI() {
+    document.getElementById('wood-val').innerText = state.wood;
+    document.getElementById('fur-val').innerText = state.fur;
+    document.getElementById('meat-val').innerText = state.meat;
+    document.getElementById('teeth-val').innerText = state.teeth;
+    document.getElementById('torch-val').innerText = state.torch;
+    document.getElementById('traps-val').innerText = state.traps;
+    document.getElementById('villagers-val').innerText = state.villagers;
+    document.getElementById('huts-val').innerText = state.huts;
+    document.getElementById('fire-status').innerText = fireTexts[state.fireLevel];
+
+    if (state.fireLevel === 0) {
+      document.getElementById('btn-light-fire').style.display = 'flex';
+      document.getElementById('btn-stoke-fire').style.display = 'none';
+    } else {
+      document.getElementById('btn-light-fire').style.display = 'none';
+      document.getElementById('btn-stoke-fire').style.display = 'flex';
+    }
+
+    if (state.wood >= 10 || state.traps > 0) {
+      document.getElementById('btn-build-trap').style.display = 'flex';
+    }
+    if (state.traps > 0) {
+      document.getElementById('btn-check-traps').style.display = 'flex';
+    }
+    if (state.wood >= 50 || state.huts > 0) {
+      document.getElementById('btn-build-hut').style.display = 'flex';
+    }
+    if (state.huts > 0) {
+      document.getElementById('villagers-box').style.display = 'flex';
+      document.getElementById('tab-forest').style.display = 'block';
+    }
+    if (state.villagers >= 4) {
+      document.getElementById('tab-map').style.display = 'block';
+    }
+  }
+
+  function setTab(tab) {
+    state.activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('room-controls').style.display = tab === 'room' ? 'flex' : 'none';
+    document.getElementById('forest-controls').style.display = tab === 'forest' ? 'flex' : 'none';
+    document.getElementById('map-controls').style.display = tab === 'map' ? 'flex' : 'none';
+  }
+
+  function stokeFire() {
+    if (state.wood <= 0) {
+      addLog("not enough wood to feed the flames.", "highlight");
+      return;
+    }
+    state.wood--;
+    state.fireLevel = Math.min(4, state.fireLevel + 1);
+    addLog(state.fireLevel === 1 ? "the dry wood catches. a spark breathes to life." : "you toss wood onto the fire. warmth spreads.", "highlight");
+    updateUI();
+  }
+
+  function gatherWood() {
+    if (state.gatherCooldown) return;
+    state.gatherCooldown = true;
+    const gained = Math.floor(Math.random() * 4) + 2;
+    state.wood += gained;
+    addLog(`you step out into the frost and gather ${gained} dry branches.`);
+    updateUI();
+    const btn = document.getElementById('btn-gather-wood');
+    btn.disabled = true;
+    setTimeout(() => {
+      state.gatherCooldown = false;
+      btn.disabled = false;
+    }, 2000);
+  }
+
+  function buildTrap() {
+    if (state.wood < 10) return;
+    state.wood -= 10;
+    state.traps++;
+    addLog("a simple snare trap is set in the frozen brush.", "important");
+    updateUI();
+  }
+
+  function checkTraps() {
+    if (state.traps <= 0) return;
+    const roll = Math.random();
+    if (roll < 0.2) {
+      addLog("the traps are empty. the snow is undisturbed.");
+    } else {
+      const f = Math.floor(Math.random() * 3) + 1;
+      const m = Math.floor(Math.random() * 3) + 1;
+      state.fur += f;
+      state.meat += m;
+      if (Math.random() > 0.6) state.teeth += 1;
+      addLog(`the traps caught prey. collected ${f} fur and ${m} raw meat.`, "highlight");
+    }
+    updateUI();
+  }
+
+  function buildHut() {
+    if (state.wood < 100) {
+      addLog("need 100 wood to erect a sturdy hut.");
+      return;
+    }
+    state.wood -= 100;
+    state.huts++;
+    state.villagers += 2;
+    addLog("a crude wooden hut is completed. refugees emerge from the gloom to shelter here.", "important");
+    updateUI();
+  }
+
+  function craftTorch() {
+    if (state.wood < 5) return;
+    state.wood -= 5;
+    state.torch++;
+    addLog("you wrap resin cloth around a sturdy branch. crafted 1 torch.", "important");
+    updateUI();
+  }
+
+  function exploreForest() {
+    if (state.torch <= 0) {
+      addLog("it is pitch black. you need a torch to see.", "highlight");
+      return;
+    }
+    state.torch--;
+    const loot = Math.floor(Math.random() * 3);
+    if (loot === 0) {
+      state.wood += 20;
+      addLog("you find an ancient fallen pine tree. collected 20 seasoned wood.", "important");
+    } else if (loot === 1) {
+      state.teeth += 3;
+      state.fur += 4;
+      addLog("you fend off a shadow beast. harvested 4 fur and 3 sharp teeth.", "highlight");
+    } else {
+      state.meat += 8;
+      addLog("you track wild game through the snow. harvested 8 meat.", "important");
+    }
+    updateUI();
+  }
+
+  function scoutOutpost() {
+    if (state.meat < 10 || state.torch < 2) {
+      addLog("need 10 meat rations and 2 torches for the expedition.");
+      return;
+    }
+    state.meat -= 10;
+    state.torch -= 2;
+    state.wood += 50;
+    state.fur += 10;
+    addLog("expedition to the outpost returned with salvage: 50 wood, 10 fur!", "important");
+    updateUI();
+  }
+
+  function scoutMine() {
+    if (state.meat < 25 || state.torch < 5) {
+      addLog("need 25 meat and 5 torches to delve the deep mines.");
+      return;
+    }
+    state.meat -= 25;
+    state.torch -= 5;
+    state.teeth += 10;
+    addLog("you cleared the mine depths! discovered ancient obsidian and teeth.", "important");
+    updateUI();
+  }
+
+  // Passive game loop
+  setInterval(() => {
+    // Fire decays
+    if (state.fireLevel > 0 && Math.random() < 0.25) {
+      state.fireLevel--;
+      if (state.fireLevel === 0) addLog("the fire has died out. darkness falls.", "highlight");
+      updateUI();
+    }
+    // Villagers collect wood
+    if (state.villagers > 0) {
+      state.wood += state.villagers;
+      updateUI();
+    }
+  }, 4000);
+
+  updateUI();
+</script>
+</body>
+</html>

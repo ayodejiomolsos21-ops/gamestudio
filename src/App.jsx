@@ -16,9 +16,9 @@ import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsMod
 import { CategoryFilterBar } from './components/CategoryFilterBar';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
-const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v16';
-const STORAGE_FAVS_KEY = 'unblocked_games_favs_v16';
-const STORAGE_RECENT_KEY = 'unblocked_games_recent_v16';
+const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v20';
+const STORAGE_FAVS_KEY = 'unblocked_games_favs_v20';
+const STORAGE_RECENT_KEY = 'unblocked_games_recent_v20';
 const STORAGE_CLOAK_KEY = 'unblocked_tab_cloak_v1';
 const STORAGE_PANIC_KEY = 'unblocked_panic_key_v1';
 const STORAGE_PANIC_URL = 'unblocked_panic_url_v1';
@@ -46,9 +46,9 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_FAVS_KEY);
-      return saved ? JSON.parse(saved) : ['a-dance-of-fire-and-ice'];
+      return saved ? JSON.parse(saved) : ['cuphead', 'super-mario-64-remaster', 'five-nights-at-freddys', 'retro-bowl', 'cookie-clicker', 'slope'];
     } catch {
-      return ['a-dance-of-fire-and-ice'];
+      return ['cuphead', 'super-mario-64-remaster', 'five-nights-at-freddys', 'retro-bowl', 'cookie-clicker', 'slope'];
     }
   });
 

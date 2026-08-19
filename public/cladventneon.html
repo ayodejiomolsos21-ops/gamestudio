@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Advent Neon</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; user-select:none; }
+  body { background:#050508; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+  #canvas-wrap { position:relative; width:720px; max-width:96vw; height:450px; background:#0c0d14; border:2px solid #00f0ff; border-radius:12px; box-shadow:0 0 40px rgba(0,240,255,0.3); overflow:hidden; }
+  canvas { width:100%; height:100%; display:block; }
+  .hud { position:absolute; top:12px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .neon-title { font-size:16px; font-weight:900; color:#00f0ff; letter-spacing:2px; text-shadow:0 0 10px #00f0ff; }
+  .controls-hint { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:12px; color:#ff0055; font-weight:bold; background:rgba(0,0,0,0.8); padding:4px 14px; border-radius:12px; border:1px solid #ff0055; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c" width="720" height="450"></canvas>
+  <div class="hud">
+    <div class="neon-title">⚡ ADVENT NEON // RESONANCE</div>
+    <div style="font-weight:bold; font-size:14px; color:#ffe600;" id="score-txt">SCORE: 0 | RESONANCE: 100%</div>
+  </div>
+  <div class="controls-hint">[A/D] Move | [W/Space] Jump / Double Jump | [J/Click] Neon Dash Strike</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let player = { x: 80, y: 300, vx: 0, vy: 0, w: 24, h: 36, onGround: false, jumps: 2, dashing: 0, face: 1 };
+  let keys = {};
+  let score = 0;
+  let particles = [];
+  let enemies = [];
+  let platforms = [
+    { x: 0, y: 390, w: 720, h: 60 },
+    { x: 120, y: 290, w: 140, h: 16 },
+    { x: 320, y: 220, w: 160, h: 16 },
+    { x: 520, y: 160, w: 140, h: 16 },
+    { x: 200, y: 120, w: 120, h: 16 }
+  ];
+
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'Space' || e.code === 'KeyW') {
+      if (player.jumps > 0) {
+        player.vy = -11;
+        player.jumps--;
+        spawnParticles(player.x, player.y + 30, '#00f0ff', 8);
+      }
+    }
+    if (e.code === 'KeyJ') {
+      dashAttack();
+    }
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  canvas.addEventListener('click', dashAttack);
+
+  function dashAttack() {
+    player.dashing = 15;
+    player.vx = player.face * 18;
+    spawnParticles(player.x, player.y + 18, '#ff0055', 14);
+  }
+
+  function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        life: 20, maxLife: 20, color
+      });
+    }
+  }
+
+  function spawnEnemy() {
+    if (enemies.length < 5) {
+      enemies.push({
+        x: Math.random() > 0.5 ? 700 : 20,
+        y: Math.random() * 250 + 100,
+        vx: (Math.random() - 0.5) * 3,
+        vy: 0,
+        w: 24, h: 24,
+        color: '#ff0055'
+      });
+    }
+  }
+  setInterval(spawnEnemy, 2000);
+
+  function loop() {
+    // Player Move
+    if (keys['KeyA'] || keys['ArrowLeft']) { player.vx = -5; player.face = -1; }
+    else if (keys['KeyD'] || keys['ArrowRight']) { player.vx = 5; player.face = 1; }
+    else if (player.dashing <= 0) { player.vx *= 0.8; }
+
+    // Gravity
+    if (player.dashing > 0) {
+      player.dashing--;
+      player.vy = 0;
+    } else {
+      player.vy += 0.55;
+    }
+
+    player.x += player.vx;
+    player.y += player.vy;
+
+    // Platform Collisions
+    player.onGround = false;
+    platforms.forEach(p => {
+      if (player.x + player.w > p.x && player.x < p.x + p.w &&
+          player.y + player.h >= p.y && player.y + player.h <= p.y + 16 && player.vy >= 0) {
+        player.y = p.y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+        player.jumps = 2;
+      }
+    });
+
+    // Screen Bounds
+    if (player.x < 0) player.x = 0;
+    if (player.x > 720 - player.w) player.x = 720 - player.w;
+
+    // Enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      let e = enemies[i];
+      e.x += e.vx;
+      if (e.x < 10 || e.x > 700) e.vx *= -1;
+
+      // Hit by dash
+      if (player.dashing > 0 && Math.hypot(player.x - e.x, player.y - e.y) < 36) {
+        spawnParticles(e.x, e.y, '#ffe600', 25);
+        enemies.splice(i, 1);
+        score += 250;
+        document.getElementById('score-txt').innerText = `SCORE: ${score} | RESONANCE: 100%`;
+      }
+    }
+
+    // Render
+    ctx.fillStyle = '#0a0a10';
+    ctx.fillRect(0, 0, 720, 450);
+
+    // Grid lines
+    ctx.strokeStyle = '#181a2e';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 720; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 450); ctx.stroke(); }
+    for (let y = 0; y < 450; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(720, y); ctx.stroke(); }
+
+    // Platforms
+    platforms.forEach(p => {
+      ctx.fillStyle = '#1e2038';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(p.x, p.y, p.w, p.h);
+    });
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let pt = particles[i];
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      pt.life--;
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x, pt.y, 4, 4);
+      if (pt.life <= 0) particles.splice(i, 1);
+    }
+
+    // Enemies
+    enemies.forEach(e => {
+      ctx.fillStyle = '#ff0055';
+      ctx.shadowColor = '#ff0055';
+      ctx.shadowBlur = 10;
+      ctx.fillRect(e.x, e.y, e.w, e.h);
+      ctx.shadowBlur = 0;
+    });
+
+    // Player
+    ctx.fillStyle = player.dashing > 0 ? '#ff0055' : '#00f0ff';
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 15;
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.shadowBlur = 0;
+
+    // Neon trail
+    if (player.dashing > 0) {
+      ctx.fillStyle = 'rgba(255, 0, 85, 0.4)';
+      ctx.fillRect(player.x - player.face * 16, player.y, player.w, player.h);
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

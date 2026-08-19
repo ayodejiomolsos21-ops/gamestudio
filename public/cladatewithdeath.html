@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>A Date With Death</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select:none; }
+  body { background:#0f0e17; color:#fffffe; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:16px; }
+  #app-window { width:100%; max-width:800px; height:550px; background:#1f1e2e; border:2px solid #ff8906; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 0 40px rgba(255,137,6,0.3); }
+  .title-bar { background:#2e2f3e; padding:10px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ff8906; }
+  .title-text { font-size:14px; font-weight:bold; color:#ff8906; letter-spacing:1px; }
+  .window-dots { display:flex; gap:6px; }
+  .dot { width:10px; height:10px; border-radius:50%; background:#e53170; }
+  .dot:nth-child(2){ background:#f25f4c; } .dot:nth-child(3){ background:#a7a9be; }
+  .stage { flex:1; display:flex; position:relative; overflow:hidden; background:linear-gradient(180deg, #16161a 0%, #0d0c11 100%); }
+  .portrait-area { width:240px; border-right:1px solid #2e2f3e; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; background:radial-gradient(circle at center, #2e1e36 0%, #16161a 100%); }
+  .reaper-avatar { width:160px; height:200px; border-radius:12px; background:linear-gradient(135deg, #7f5af0, #2cb67d); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(127,90,240,0.5); position:relative; }
+  .reaper-face { font-size:50px; }
+  .reaper-name { margin-top:12px; font-weight:bold; font-size:14px; color:#ff8906; }
+  .reaper-affinity { font-size:12px; color:#2cb67d; margin-top:4px; }
+  .chat-area { flex:1; display:flex; flex-direction:column; padding:16px; }
+  .chat-history { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:8px; }
+  .msg-bubble { max-width:80%; padding:10px 14px; border-radius:12px; font-size:13px; line-height:1.4; animation:fadeIn 0.25s ease-out; }
+  .msg-reaper { background:#2e2f3e; color:#fffffe; border-left:3px solid #ff8906; align-self:flex-start; }
+  .msg-player { background:#7f5af0; color:#fff; align-self:flex-end; }
+  .dialog-choices { display:flex; flex-direction:column; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid #2e2f3e; }
+  .choice-btn { background:#2e2f3e; border:1px solid #7f5af0; color:#fffffe; padding:10px 14px; border-radius:8px; font-size:13px; cursor:pointer; text-align:left; transition:all 0.15s; }
+  .choice-btn:hover { background:#7f5af0; color:#fff; transform:translateX(4px); }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+</style>
+</head>
+<body>
+<div id="app-window">
+  <div class="title-bar">
+    <div class="title-text">☠️ A DATE WITH DEATH // SOUL CHAT v2.4</div>
+    <div class="window-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+  <div class="stage">
+    <div class="portrait-area">
+      <div class="reaper-avatar" id="avatar">
+        <div class="reaper-face" id="face-icon">💀</div>
+      </div>
+      <div class="reaper-name">Grim Reaper (Casper)</div>
+      <div class="reaper-affinity" id="affinity-text">Affinity: 0% [Stranger]</div>
+    </div>
+    <div class="chat-area">
+      <div class="chat-history" id="chat-history"></div>
+      <div class="dialog-choices" id="choices-box"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let affinity = 10;
+  let step = 0;
+
+  const scriptTree = [
+    {
+      reaper: "Hey. So... I'm supposed to reap your soul today. But you didn't answer my knock, so I installed this chat app on your PC.",
+      face: "💀",
+      choices: [
+        { text: "Wait, you're the Grim Reaper and you're texting me?!", diff: 10, next: 1 },
+        { text: "Can you come back in 80 years? I'm busy gaming.", diff: 15, next: 1 },
+        { text: "Is this a prank? Who gave you my IP?", diff: 0, next: 1 }
+      ]
+    },
+    {
+      reaper: "Haha, standard denial phase. Look, technically my shift ends in an hour. If you keep me entertained in chat, I might 'accidentally' lose your soul file.",
+      face: "😏",
+      choices: [
+        { text: "Deal! What does Death do for fun when you're not harvesting souls?", diff: 15, next: 2 },
+        { text: "I bet you have a soft spot for cats and iced coffee.", diff: 20, next: 2 },
+        { text: "Just give me the scythe, I want to take your job.", diff: 5, next: 2 }
+      ]
+    },
+    {
+      reaper: "Actually... I love black cats and caramel lattes! How did you guess that?! Most mortals scream about their life choices.",
+      face: "✨",
+      choices: [
+        { text: "Because you're not scary, Casper. You're kind of cute.", diff: 25, next: 3 },
+        { text: "Lucky guess. So what happens if we become best friends?", diff: 15, next: 3 },
+        { text: "I'm just naturally observant.", diff: 10, next: 3 }
+      ]
+    },
+    {
+      reaper: "C-cute?! *blushes in ectoplasm* Nobody has ever called a primordial force of mortality cute before... My scythe is literally vibrating.",
+      face: "😳",
+      choices: [
+        { text: "Let's make a bet: if I beat you in rock-paper-scissors, I get immortality!", diff: 15, next: 4 },
+        { text: "Do you want to grab coffee sometime in the mortal realm?", diff: 25, next: 4 }
+      ]
+    },
+    {
+      reaper: "You know what? I'm shredding your reaping paperwork right now. You're granted another 100 years of life — on one condition: you have to chat with me every Friday night!",
+      face: "💖",
+      choices: [
+        { text: "It's a date, Reaper. See you Friday! ☕", diff: 30, next: -1 }
+      ]
+    }
+  ];
+
+  function renderStep(index) {
+    if (index === -1) {
+      addMessage("Grim Reaper", "Connection secured. Mortality paused! DATE CLEARED! 🌟", "msg-reaper");
+      document.getElementById('choices-box').innerHTML = `
+        <button class="choice-btn" onclick="restart()">🔄 Play Again (Try other dialog routes)</button>
+      `;
+      return;
+    }
+
+    const current = scriptTree[index];
+    document.getElementById('face-icon').innerText = current.face;
+    addMessage("Grim Reaper", current.reaper, "msg-reaper");
+
+    const box = document.getElementById('choices-box');
+    box.innerHTML = '';
+    current.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerText = ch.text;
+      btn.onclick = () => {
+        addMessage("You", ch.text, "msg-player");
+        affinity += ch.diff;
+        document.getElementById('affinity-text').innerText = `Affinity: ${affinity}% [${getRank(affinity)}]`;
+        setTimeout(() => renderStep(ch.next), 600);
+      };
+      box.appendChild(btn);
+    });
+  }
+
+  function getRank(aff) {
+    if (aff >= 80) return "Soulmates 💕";
+    if (aff >= 50) return "Crush 😳";
+    if (aff >= 30) return "Friend 😊";
+    return "Stranger 😐";
+  }
+
+  function addMessage(sender, text, cls) {
+    const hist = document.getElementById('chat-history');
+    const b = document.createElement('div');
+    b.className = `msg-bubble ${cls}`;
+    b.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    hist.appendChild(b);
+    hist.scrollTop = hist.scrollHeight;
+  }
+
+  function restart() {
+    document.getElementById('chat-history').innerHTML = '';
+    affinity = 10;
+    renderStep(0);
+  }
+
+  renderStep(0);
+</script>
+</body>
+</html>
