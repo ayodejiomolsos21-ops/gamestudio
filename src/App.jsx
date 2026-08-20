@@ -4,7 +4,8 @@ import {
   Flame, 
   Play, 
   Plus, 
-  FileCode 
+  FileCode,
+  Bot
 } from 'lucide-react';
 import { defaultGamesList } from './data/defaultGames';
 import { Header } from './components/Header';
@@ -13,12 +14,14 @@ import { GamePlayer } from './components/GamePlayer';
 import { AddGameModal } from './components/AddGameModal';
 import { JsonManagerModal } from './components/JsonManagerModal';
 import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsModal';
+import { AiChatHelperModal } from './components/AiChatHelperModal';
 import { CategoryFilterBar } from './components/CategoryFilterBar';
+import { LiveCommunityChat } from './components/LiveCommunityChat';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
-const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v20';
-const STORAGE_FAVS_KEY = 'unblocked_games_favs_v20';
-const STORAGE_RECENT_KEY = 'unblocked_games_recent_v20';
+const STORAGE_GAMES_KEY = 'unblocked_games_dataset_v22';
+const STORAGE_FAVS_KEY = 'unblocked_games_favs_v22';
+const STORAGE_RECENT_KEY = 'unblocked_games_recent_v22';
 const STORAGE_CLOAK_KEY = 'unblocked_tab_cloak_v1';
 const STORAGE_PANIC_KEY = 'unblocked_panic_key_v1';
 const STORAGE_PANIC_URL = 'unblocked_panic_url_v1';
@@ -65,6 +68,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [isPanicModalOpen, setIsPanicModalOpen] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   // Tab Cloaking / Panic Settings
   const [selectedCloak, setSelectedCloak] = useState(() => {
@@ -256,6 +260,7 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenJsonModal={() => setIsJsonModalOpen(true)}
         onOpenPanicModal={() => setIsPanicModalOpen(true)}
+        onOpenAiChatModal={() => setIsAiChatOpen(true)}
         onPanicTrigger={triggerPanic}
         favoritesCount={favorites.length}
         totalGamesCount={games.length}
@@ -297,6 +302,13 @@ export default function App() {
                       className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-slate-950 font-orbitron font-black text-xs shadow-xl shadow-cyan-500/20 transition-all duration-200 flex items-center gap-2 active:scale-95"
                     >
                       <Play className="w-4 h-4 fill-current" /> LAUNCH GAME
+                    </button>
+                    <button
+                      id="hero-ai-chat-btn"
+                      onClick={() => setIsAiChatOpen(true)}
+                      className="px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-pink-500/20 hover:from-cyan-500/30 hover:to-pink-500/30 border border-cyan-400/60 text-cyan-300 hover:text-cyan-200 font-orbitron font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-cyan-950/40"
+                    >
+                      <Bot className="w-4 h-4 text-cyan-400" /> ✨ AI CHAT HELPER
                     </button>
                     <button
                       id="hero-add-custom-btn"
@@ -399,6 +411,13 @@ export default function App() {
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
             <span>PANIC KEY: <kbd className="px-1.5 py-0.5 rounded bg-[#141829] border border-pink-500/40 text-pink-300 font-bold">{panicKey}</kbd></span>
             <button
+              onClick={() => setIsAiChatOpen(true)}
+              className="text-cyan-400 hover:text-cyan-300 transition font-bold underline underline-offset-2 flex items-center gap-1"
+            >
+              <Bot className="w-3 h-3" />
+              AI COPILOT
+            </button>
+            <button
               onClick={() => setIsPanicModalOpen(true)}
               className="text-pink-400 hover:text-pink-300 transition underline underline-offset-2"
             >
@@ -415,6 +434,13 @@ export default function App() {
       </footer>
 
       {/* Modals */}
+      <AiChatHelperModal
+        isOpen={isAiChatOpen}
+        onClose={() => setIsAiChatOpen(false)}
+        activeGame={activeGame}
+        onPanicTrigger={triggerPanic}
+      />
+
       <AddGameModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -445,6 +471,9 @@ export default function App() {
           localStorage.setItem(STORAGE_PANIC_URL, u);
         }}
       />
+
+      {/* Floating Real-Time Community Live Chat Button & Panel */}
+      <LiveCommunityChat activeGame={activeGame} />
     </div>
   );
 }

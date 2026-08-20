@@ -10,7 +10,8 @@ import {
   Flame, 
   Clock,
   Users,
-  Activity
+  Activity,
+  Bot
 } from 'lucide-react';
 import ssj4GogetaIcon from '../assets/images/ssj4_gogeta_icon_1787080126364.jpg';
 
@@ -34,6 +35,7 @@ export const Header = ({
   onOpenAddModal,
   onOpenJsonModal,
   onOpenPanicModal,
+  onOpenAiChatModal,
   onPanicTrigger,
   favoritesCount,
   totalGamesCount
@@ -167,6 +169,17 @@ export const Header = ({
 
           {/* Action HUD Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* AI CHAT HELPER BUTTON */}
+            <button
+              id="ai-chat-helper-btn"
+              onClick={onOpenAiChatModal}
+              title="AI Chat Helper - Game Guides, Walkthroughs & Speedrun Tips"
+              className="px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 via-indigo-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-slate-950 font-orbitron font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/30 border border-cyan-300/80 transition-all active:scale-95 group"
+            >
+              <Bot className="w-4 h-4 text-slate-950 group-hover:rotate-12 transition-transform" />
+              <span className="tracking-wide">🤖 AI CHAT HELPER</span>
+            </button>
+
             {/* Quick Panic Abort Button */}
             <button
               id="panic-quick-btn"
@@ -214,6 +227,18 @@ export const Header = ({
 
         {/* Category Cyber Chips Navigation */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar border-t border-[#131726]">
+          {/* Quick AI Game Copilot launcher pill */}
+          <button
+            id="cat-btn-ai-shortcut"
+            onClick={onOpenAiChatModal}
+            className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-mono-cyber font-bold uppercase tracking-wider bg-gradient-to-r from-cyan-500/20 to-pink-500/20 text-cyan-300 border border-cyan-400/60 hover:border-cyan-300 shadow-sm flex items-center gap-1.5 transition hover:scale-105"
+          >
+            <Bot className="w-3 h-3 text-cyan-400" />
+            <span>✨ AI Game Copilot</span>
+            <span className="px-1.5 py-0.2 rounded text-[9px] bg-cyan-400/20 text-cyan-300 font-bold border border-cyan-400/30">
+              AI
+            </span>
+          </button>
           {CATEGORIES.map((category, idx) => {
             const isSelected = selectedCategory === category;
             return (

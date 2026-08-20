@@ -1,5 +1,33 @@
 [
   {
+    "id": "ddlc",
+    "title": "Doki Doki Literature Club!",
+    "category": "RPG",
+    "description": "Welcome to the Literature Club! Write poems for your crush, make club choices, and experience this celebrated psychological visual novel masterpiece.",
+    "controls": "[Left Click / Space / Enter] Advance Text & Select Choices, [Scroll Wheel] Backlog, [Esc / Menu Button] Menu & Settings, [Ctrl] Skip Dialogue",
+    "iframeSrc": "doki-doki-literature-club.html",
+    "thumbnail": "",
+    "thumbnailGradient": "from-pink-400 via-rose-500 to-fuchsia-950",
+    "iconName": "BookOpen",
+    "featured": true,
+    "rating": 5,
+    "plays": 245000
+  },
+  {
+    "id": "undertale-yellow",
+    "title": "UNDERTALE YELLOW",
+    "category": "RPG",
+    "description": "A fan-made prequel to the critically acclaimed RPG UNDERTALE. Experience Clover's journey through the Underground with completely original story, bullet-hell battles, and breathtaking soundtrack.",
+    "controls": "[Arrow Keys / WASD] Move & Navigate, [Z / Enter / Space] Confirm & Shoot, [X / Shift] Cancel & Slow Soul, [C / Ctrl] Menu",
+    "iframeSrc": "undertale-yellow.html",
+    "thumbnail": "",
+    "thumbnailGradient": "from-amber-400 via-yellow-600 to-slate-950",
+    "iconName": "Sparkles",
+    "featured": true,
+    "rating": 5,
+    "plays": 184500
+  },
+  {
     "id": "cuphead",
     "title": "Cuphead",
     "category": "Arcade",
