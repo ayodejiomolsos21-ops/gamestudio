@@ -156,7 +156,7 @@ export const AiChatHelperModal = ({
 
       const data = await response.json();
 
-      if (response.ok && data.reply) {
+      if (data && data.reply) {
         setMessages(prev => [
           ...prev,
           {
@@ -167,13 +167,13 @@ export const AiChatHelperModal = ({
           }
         ]);
       } else {
-        const errorText = data.fallbackReply || data.error || 'Unable to connect to AI server. Please try again.';
+        const errorText = data?.fallbackReply || data?.error || 'Unable to connect to AI server. Please try asking again.';
         setMessages(prev => [
           ...prev,
           {
             id: `msg-err-${Date.now()}`,
             role: 'model',
-            text: `⚠️ **Error**: ${errorText}`,
+            text: errorText,
             timestamp: new Date().toISOString()
           }
         ]);
