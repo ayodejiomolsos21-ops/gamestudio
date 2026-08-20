@@ -77,6 +77,24 @@ export const Header = ({
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      // If user pressed '/' or 'Ctrl+K' / 'Cmd+K' and not typing in another input
+      if ((e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) && 
+          document.activeElement?.tagName !== 'INPUT' && 
+          document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        const input = document.getElementById('search-input');
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#1c2333] bg-[#090b12]/95 backdrop-blur-xl shadow-lg shadow-cyan-950/20">
       {/* Cyber Accent Top Line */}
@@ -142,7 +160,7 @@ export const Header = ({
           {/* Cyberpunk Search Terminal Box */}
           <div className="flex-1 max-w-md mx-1 sm:mx-2">
             <div className="relative group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-cyan-400 font-mono-cyber text-xs">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-cyan-400 font-mono-cyber text-xs font-bold">
                 &gt;_
               </div>
               <input
@@ -150,20 +168,35 @@ export const Header = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="EXECUTE SEARCH // [name, category, controls]"
-                className="w-full bg-[#0d101c] border border-cyan-950/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-lg pl-9 pr-8 py-2 text-xs sm:text-sm font-mono-cyber text-cyan-100 placeholder-slate-500 outline-none transition-all shadow-inner"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    onSearchChange('');
+                    e.currentTarget.blur();
+                  }
+                }}
+                placeholder="Search games, categories, controls..."
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full bg-[#0b0e1b] border border-cyan-500/40 hover:border-cyan-400/70 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 rounded-lg pl-9 pr-14 py-2 text-xs sm:text-sm font-mono-cyber text-white placeholder-slate-400 outline-none transition-all shadow-inner focus:shadow-cyan-500/10"
               />
-              {searchQuery && (
-                <button
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-pink-400 p-1"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {searchQuery ? (
+                  <button
+                    onClick={() => onSearchChange('')}
+                    title="Clear search (Esc)"
+                    className="text-slate-400 hover:text-pink-400 p-1 transition rounded hover:bg-white/5 active:scale-95"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono-cyber font-semibold text-slate-400 bg-slate-900 border border-slate-700/60 rounded pointer-events-none">
+                    /
+                  </kbd>
+                )}
+              </div>
               {/* Corner tech accent tick */}
-              <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-400/40 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-400/40 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-400/50 pointer-events-none group-focus-within:border-cyan-300" />
+              <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-400/50 pointer-events-none group-focus-within:border-cyan-300" />
             </div>
           </div>
 
