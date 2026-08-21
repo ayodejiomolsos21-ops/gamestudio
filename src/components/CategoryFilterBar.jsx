@@ -12,7 +12,8 @@ import {
   SlidersHorizontal, 
   ArrowUpDown,
   X,
-  Filter
+  Filter,
+  Globe
 } from 'lucide-react';
 
 export const CATEGORY_DEFINITIONS = [
@@ -42,6 +43,7 @@ export const CategoryFilterBar = ({
   onSortChange,
   searchQuery,
   onClearSearch,
+  onOpenBrowserModal,
   totalGames,
   filteredCount
 }) => {
@@ -96,6 +98,21 @@ export const CategoryFilterBar = ({
 
         {/* Scrollable Category Chips */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+          {/* Dedicated Unblocked Browser launcher pill */}
+          {onOpenBrowserModal && (
+            <button
+              id="filter-pill-browser"
+              onClick={onOpenBrowserModal}
+              className="whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-mono-cyber font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 border bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 text-emerald-300 border-emerald-500/60 hover:border-emerald-300 shadow-md shadow-emerald-950/40 hover:scale-105 active:scale-95"
+            >
+              <Globe className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>🌐 Web Browser</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-400/40">
+                PORTAL
+              </span>
+            </button>
+          )}
+
           {CATEGORY_DEFINITIONS.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             const Icon = cat.icon;

@@ -4,8 +4,9 @@ import {
   Flame, 
   Play, 
   Plus, 
-  FileCode,
-  Bot
+  FileCode, 
+  Bot,
+  Globe
 } from 'lucide-react';
 import { defaultGamesList } from './data/defaultGames';
 import { Header } from './components/Header';
@@ -15,6 +16,7 @@ import { AddGameModal } from './components/AddGameModal';
 import { JsonManagerModal } from './components/JsonManagerModal';
 import { PanicSettingsModal, CLOAK_OPTIONS } from './components/PanicSettingsModal';
 import { AiChatHelperModal } from './components/AiChatHelperModal';
+import { UnblockedBrowserModal } from './components/UnblockedBrowserModal';
 import { CategoryFilterBar } from './components/CategoryFilterBar';
 import { LiveCommunityChat } from './components/LiveCommunityChat';
 import ssj4GogetaIcon from './assets/images/ssj4_gogeta_icon_1787080126364.jpg';
@@ -69,6 +71,7 @@ export default function App() {
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [isPanicModalOpen, setIsPanicModalOpen] = useState(false);
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
 
   // Tab Cloaking / Panic Settings
   const [selectedCloak, setSelectedCloak] = useState(() => {
@@ -261,6 +264,7 @@ export default function App() {
         onOpenJsonModal={() => setIsJsonModalOpen(true)}
         onOpenPanicModal={() => setIsPanicModalOpen(true)}
         onOpenAiChatModal={() => setIsAiChatOpen(true)}
+        onOpenBrowserModal={() => setIsBrowserOpen(true)}
         onPanicTrigger={triggerPanic}
         favoritesCount={favorites.length}
         totalGamesCount={games.length}
@@ -304,6 +308,13 @@ export default function App() {
                       <Play className="w-4 h-4 fill-current" /> LAUNCH GAME
                     </button>
                     <button
+                      id="hero-browser-btn"
+                      onClick={() => setIsBrowserOpen(true)}
+                      className="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 hover:from-emerald-500/30 hover:to-cyan-500/30 border border-emerald-400/60 text-emerald-300 hover:text-emerald-200 font-orbitron font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-emerald-950/40"
+                    >
+                      <Globe className="w-4 h-4 text-emerald-400" /> 🌐 UNBLOCKED BROWSER
+                    </button>
+                    <button
                       id="hero-ai-chat-btn"
                       onClick={() => setIsAiChatOpen(true)}
                       className="px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-pink-500/20 hover:from-cyan-500/30 hover:to-pink-500/30 border border-cyan-400/60 text-cyan-300 hover:text-cyan-200 font-orbitron font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-cyan-950/40"
@@ -333,6 +344,7 @@ export default function App() {
               onSortChange={setSortBy}
               searchQuery={searchQuery}
               onClearSearch={() => setSearchQuery('')}
+              onOpenBrowserModal={() => setIsBrowserOpen(true)}
               totalGames={games.length}
               filteredCount={filteredGames.length}
             />
@@ -411,6 +423,13 @@ export default function App() {
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
             <span>PANIC KEY: <kbd className="px-1.5 py-0.5 rounded bg-[#141829] border border-pink-500/40 text-pink-300 font-bold">{panicKey}</kbd></span>
             <button
+              onClick={() => setIsBrowserOpen(true)}
+              className="text-emerald-400 hover:text-emerald-300 transition font-bold underline underline-offset-2 flex items-center gap-1"
+            >
+              <Globe className="w-3 h-3" />
+              UNBLOCKED BROWSER
+            </button>
+            <button
               onClick={() => setIsAiChatOpen(true)}
               className="text-cyan-400 hover:text-cyan-300 transition font-bold underline underline-offset-2 flex items-center gap-1"
             >
@@ -434,6 +453,11 @@ export default function App() {
       </footer>
 
       {/* Modals */}
+      <UnblockedBrowserModal
+        isOpen={isBrowserOpen}
+        onClose={() => setIsBrowserOpen(false)}
+      />
+
       <AiChatHelperModal
         isOpen={isAiChatOpen}
         onClose={() => setIsAiChatOpen(false)}
